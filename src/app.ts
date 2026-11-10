@@ -109,6 +109,10 @@ export function createApp(dependencies: AppDependencies = {}) {
           );
         }
 
+        if (lab.pendingReviews > 0) {
+          return problem("reviews-pending", "Resolve every review queue item before publishing.");
+        }
+
         const publishedAt = nowDate.toISOString();
         const published = labs.publish(lab.id, publishedAt);
         if (!published) {
