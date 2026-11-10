@@ -56,10 +56,15 @@ and use the previously selected lab-publish endpoint.
 
 ## Prompts for fixes
 
-Record each future implementation fix prompt here with the failing test name and
-the contract section it refers to. No test code should be included in the prompt.
+### P-02 — Restore review gate
+
+> Fix the failing `rejects publishing while any review is pending` contract test to match section 5, step 7 of `docs/contract/post-lab-publish.md`. Restore the implementation guard; do not change the test.
 
 ## Changed / Rejected
 
-See F-01 through F-03 above. Add each later implementation decision here with a
-specific explanation of what changed and what was rejected.
+- **Changed:** restored the pending-review check after the deliberate regression
+  made the contract test return 200 instead of 409.
+- **Rejected:** editing or weakening the test to accept publishing while reviews
+  remain pending.
+
+See F-01 through F-04 for the earlier implementation findings and decisions.
