@@ -1,0 +1,17 @@
+{
+  "name": "awad-LeeTKOB-backend",
+  "version": "1.0.50",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "bun run --watch src/index.ts"
+  },
+  "dependencies": {
+    "@elysia/html": "^1.4.1",
+    "@elysia/openapi": "^2.0.0-rc.1",
+    "elysia": "^2.0.0-rc.3"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}
