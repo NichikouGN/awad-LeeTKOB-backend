@@ -10,6 +10,13 @@ failing test, never paste or edit test code to direct a fix.
 
 ## Prompts
 
+### P-00 — Select the endpoint and contract shape
+
+> the rubric mentioned IA3 with contract.md so i also supplied it can you check and see? as for a single endpoint that will be focused on maybe we can pick one of the ones that they suggested. can you now plan for me first
+
+Scope: compare the rubric's suggested LeeTKOB endpoints and use the IA3 contract
+as a specificity/structure reference.
+
 ### P-01 — PA2 implementation request
 
 > ok everything seem good can you now help me with the actual implementation. the rubric also ask for a self-assetments and some code push to test out the CI block too so can you help me with those too
@@ -66,5 +73,15 @@ and use the previously selected lab-publish endpoint.
   made the contract test return 200 instead of 409.
 - **Rejected:** editing or weakening the test to accept publishing while reviews
   remain pending.
+
+### F-05 — CI regression proof
+
+- **Found:** PR #1 failed the unchanged `rejects publishing while any review
+  is pending` test; the endpoint returned 200 instead of the contract's 409.
+- **Changed:** kept the failing implementation in its own commit, configured
+  GitHub Actions to run on branch pushes and pull requests, then added a separate
+  repair commit. After the red result, `main` was protected with `quality` as a
+  required check. PR #1 passed on fix commit `aef4811`.
+- **Rejected:** changing the test or the contract to hide the implementation bug.
 
 See F-01 through F-04 for the earlier implementation findings and decisions.
