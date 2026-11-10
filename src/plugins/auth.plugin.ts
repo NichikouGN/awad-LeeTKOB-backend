@@ -1,13 +1,12 @@
-import { Elysia } from "elysia";
+export type Principal = {
+  userId: string;
+  role: "admin" | "ta" | "student";
+  classIds: number[];
+};
 
-export const jwtAuth = new Elysia().macro({
-  jwtAuth: {
-    derive: ({ headers, status }) => {
-      const header = headers.authorization;
+export type Authenticator = (
+  authorizationHeader: string | null,
+) => Principal | null | Promise<Principal | null>;
 
-      if (!header) return status(401, "Unauthorized");
-
-      return { userId: "abc" };
-    },
-  },
-});
+/** Default behavior is closed until a real credential verifier is wired in. */
+export const denyAllAuthenticator: Authenticator = () => null;
