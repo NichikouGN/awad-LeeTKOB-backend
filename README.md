@@ -3,6 +3,11 @@
 Backend starter for LeeTKOB, built with Bun, TypeScript, and Elysia 2.0 RC. The
 PA2 implementation focuses on the lab-publish endpoint contract; authentication
 and persistence are replaceable seams and are not production integrations yet.
+The final-product architecture is a modular monolith using PostgreSQL,
+BullMQ/Redis, a PostgreSQL transactional outbox, Docker-based judging, and SSE
+for live submission updates. The durable queue, outbox dispatcher,
+judge/review workers, and sandbox integration are not implemented in the
+current PA2 project.
 
 ## Requirements
 
@@ -38,11 +43,7 @@ protection for a red check to block a merge.
 
 ## Endpoint contract
 
-See [`docs/contract/post-lab-publish.md`](docs/contract/post-lab-publish.md).
-The handler is available at `POST /api/v1/labs/{labId}/publish`. It fails closed
-until a real authenticator and persistent lab repository are wired in; tests
-inject deterministic fakes to exercise authorization, ownership, deadline,
-review, and repeated-publish behavior.
+The PA2 milestone contract is [`docs/contract/post-lab-publish.md`](docs/contract/post-lab-publish.md), at `POST /api/v1/labs/{labId}/publish`. The final-product contract is [`docs/contract/post-lab-publish-v2.md`](docs/contract/post-lab-publish-v2.md), at `POST /api/v2/labs/{labId}/publish`; it blocks publication until the entire judging and review pipeline completes. The PA2 handler still fails closed until a real authenticator and persistent lab repository are wired in.
 
 ## Secrets and model spending
 

@@ -1,0 +1,2 @@
+inspect-db:
+	psql postgresql://postgres:postgres@localhost:5432/mydb
