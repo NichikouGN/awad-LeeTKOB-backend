@@ -1,21 +1,16 @@
-import { sql } from "drizzle-orm";
-import { check, pgTable, unique, varchar } from "drizzle-orm/pg-core";
+import { pgTable, varchar, pgEnum } from "drizzle-orm/pg-core";
 import { identity, instant } from "./_helpers";
+import { uuid } from "drizzle-orm/cockroach-core";
 
-export const users = pgTable(
-  "users",
-  {
-    userId: identity("user_id"),
-    identitySubject: varchar("identity_subject", { length: 255 }).notNull(),
-    displayName: varchar("display_name", { length: 160 }).notNull(),
-    role: varchar("role", { length: 16 }).notNull(),
-    accountStatus: varchar("account_status", { length: 16 }).notNull().default("active"),
-    createdAt: instant("created_at").notNull(),
-    updatedAt: instant("updated_at").notNull(),
-  },
-  (t) => [
-    unique("users_identity_subject_unique").on(t.identitySubject),
-    check("users_role_check", sql`${t.role} IN ('admin', 'ta', 'student')`),
-    check("users_account_status_check", sql`${t.accountStatus} IN ('active', 'disabled')`),
-  ],
-);
+export const userRoleEnum = pgEnum("user_role", ["ADMIN", "TA", "STU"]);
+export const userStatusEnum = pgEnum("user_status", ["ACTIVE", "DISABLED"]);
+
+export const users = pgTable("users", {
+  userId: uuid("user_id").defaultRandom().primaryKey(),
+  displayName: varchar("display_name", { length: 160 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: userRoleEnum().notNull().default("STU"),
+  userStatus: userStatusEnum().notNull().default("ACTIVE"),
+  createdAt: instant("created_at").notNull(),
+  updatedAt: instant("updated_at").notNull(),
+});

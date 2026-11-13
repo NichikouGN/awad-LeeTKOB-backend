@@ -11,3 +11,5 @@ export const db = drizzle({
     connectionString: DATABASE_URL,
   },
 });
+
+export type Database = typeof db;

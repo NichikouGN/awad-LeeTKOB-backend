@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   check,
   index,
   jsonb,
@@ -10,12 +9,13 @@ import {
 } from "drizzle-orm/pg-core";
 import { identity, instant } from "./_helpers";
 import { users } from "./users.schema";
+import { uuid } from "drizzle-orm/cockroach-core";
 
 export const auditEvents = pgTable(
   "audit_events",
   {
     auditEventId: identity("audit_event_id"),
-    actorUserId: bigint("actor_user_id", { mode: "number" }).references(
+    actorUserId: uuid("actor_user_id").references(
       () => users.userId,
       {
         onDelete: "restrict",
@@ -58,7 +58,7 @@ export const outboxEvents = pgTable(
     outboxEventId: identity("outbox_event_id"),
     eventKey: varchar("event_key", { length: 160 }).notNull().unique(),
     jobType: varchar("job_type", { length: 32 }).notNull(),
-    aggregateId: bigint("aggregate_id", { mode: "number" }).notNull(),
+    aggregateId: uuid("aggregate_id").notNull(),
     status: varchar("status", { length: 16 }).notNull(),
     attemptCount: smallint("attempt_count").notNull().default(0),
     availableAt: instant("available_at").notNull(),

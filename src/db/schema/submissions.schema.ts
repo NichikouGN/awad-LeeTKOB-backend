@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   char,
   check,
@@ -18,15 +17,16 @@ import {
 import { identity, instant, bytes } from "./_helpers";
 import { users } from "./users.schema";
 import { constraintRevisions, labConstraints, labs } from "./labs.schema";
+import { uuid } from "drizzle-orm/cockroach-core";
 
 export const submissions = pgTable(
   "submissions",
   {
     submissionId: identity("submission_id"),
-    labId: bigint("lab_id", { mode: "number" })
+    labId: uuid("lab_id")
       .notNull()
       .references(() => labs.labId, { onDelete: "restrict" }),
-    studentUserId: bigint("student_user_id", { mode: "number" })
+    studentUserId: uuid("student_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     idempotencyKey: varchar("idempotency_key", { length: 128 }).notNull(),
@@ -62,7 +62,7 @@ export const judgeJobs = pgTable(
   "judge_jobs",
   {
     judgeJobId: identity("judge_job_id"),
-    submissionId: bigint("submission_id", { mode: "number" })
+    submissionId: uuid("submission_id")
       .notNull()
       .unique()
       .references(() => submissions.submissionId, { onDelete: "restrict" }),
@@ -95,7 +95,7 @@ export const testResults = pgTable(
   "test_results",
   {
     testResultId: identity("test_result_id"),
-    submissionId: bigint("submission_id", { mode: "number" })
+    submissionId: uuid("submission_id")
       .notNull()
       .references(() => submissions.submissionId, { onDelete: "restrict" }),
     testNumber: integer("test_number").notNull(),
@@ -121,7 +121,7 @@ export const reviewRuns = pgTable(
   "review_runs",
   {
     reviewRunId: identity("review_run_id"),
-    submissionId: bigint("submission_id", { mode: "number" })
+    submissionId: uuid("submission_id")
       .notNull()
       .references(() => submissions.submissionId, { onDelete: "restrict" }),
     attemptNumber: integer("attempt_number").notNull(),
@@ -158,17 +158,17 @@ export const reviewItems = pgTable(
   "review_items",
   {
     reviewItemId: identity("review_item_id"),
-    reviewRunId: bigint("review_run_id", { mode: "number" })
+    reviewRunId: uuid("review_run_id")
       .notNull()
       .references(() => reviewRuns.reviewRunId, { onDelete: "restrict" }),
-    submissionId: bigint("submission_id", { mode: "number" })
+    submissionId: uuid("submission_id")
       .notNull()
       .references(() => submissions.submissionId, { onDelete: "restrict" }),
-    labId: bigint("lab_id", { mode: "number" })
+    labId: uuid("lab_id")
       .notNull()
       .references(() => labs.labId, { onDelete: "restrict" }),
     constraintId: varchar("constraint_id", { length: 40 }).notNull(),
-    constraintRevisionId: bigint("constraint_revision_id", { mode: "number" })
+    constraintRevisionId: uuid("constraint_revision_id")
       .notNull()
       .references(() => constraintRevisions.constraintRevisionId, { onDelete: "restrict" }),
     proposedVerdict: varchar("proposed_verdict", { length: 12 }).notNull(),
@@ -215,14 +215,14 @@ export const reviewDecisions = pgTable(
   "review_decisions",
   {
     reviewDecisionId: identity("review_decision_id"),
-    reviewItemId: bigint("review_item_id", { mode: "number" })
+    reviewItemId: uuid("review_item_id")
       .notNull()
       .references(() => reviewItems.reviewItemId, { onDelete: "restrict" }),
     sequenceNumber: integer("sequence_number").notNull(),
     verdict: varchar("verdict", { length: 12 }).notNull(),
     reason: text("reason").notNull(),
     evidence: jsonb("evidence").notNull(),
-    decidedByUserId: bigint("decided_by_user_id", { mode: "number" })
+    decidedByUserId: uuid("decided_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     decidedAt: instant("decided_at").notNull(),

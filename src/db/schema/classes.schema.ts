@@ -1,14 +1,15 @@
 import { sql } from "drizzle-orm";
-import { bigint, check, index, pgTable, unique, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { check, index, pgTable, unique, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { identity, instant, bytes } from "./_helpers";
 import { users } from "./users.schema";
+import { uuid } from "drizzle-orm/cockroach-core";
 
 export const classes = pgTable(
   "classes",
   {
     classId: identity("class_id"),
     name: varchar("name", { length: 120 }).notNull(),
-    createdByUserId: bigint("created_by_user_id", { mode: "number" })
+    createdByUserId: uuid("created_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     createdAt: instant("created_at").notNull(),
@@ -22,13 +23,13 @@ export const classTas = pgTable(
   "class_tas",
   {
     classTaId: identity("class_ta_id"),
-    classId: bigint("class_id", { mode: "number" })
+    classId: uuid("class_id")
       .notNull()
       .references(() => classes.classId, { onDelete: "restrict" }),
-    taUserId: bigint("ta_user_id", { mode: "number" })
+    taUserId: uuid("ta_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
-    assignedByUserId: bigint("assigned_by_user_id", { mode: "number" })
+    assignedByUserId: uuid("assigned_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     assignedAt: instant("assigned_at").notNull(),
@@ -49,15 +50,15 @@ export const classStudents = pgTable(
   "class_students",
   {
     classStudentId: identity("class_student_id"),
-    classId: bigint("class_id", { mode: "number" })
+    classId: uuid("class_id")
       .notNull()
       .references(() => classes.classId, { onDelete: "restrict" }),
-    studentUserId: bigint("student_user_id", { mode: "number" })
+    studentUserId: uuid("student_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     joinedAt: instant("joined_at").notNull(),
     joinedVia: varchar("joined_via", { length: 16 }).notNull(),
-    joinedByUserId: bigint("joined_by_user_id", { mode: "number" }).references(() => users.userId, {
+    joinedByUserId: uuid("joined_by_user_id").references(() => users.userId, {
       onDelete: "restrict",
     }),
     leftAt: instant("left_at"),
@@ -78,11 +79,11 @@ export const inviteCodes = pgTable(
   "invite_codes",
   {
     inviteCodeId: identity("invite_code_id"),
-    classId: bigint("class_id", { mode: "number" })
+    classId: uuid("class_id")
       .notNull()
       .references(() => classes.classId, { onDelete: "restrict" }),
     codeHash: bytes("code_hash").notNull(),
-    createdByUserId: bigint("created_by_user_id", { mode: "number" })
+    createdByUserId: uuid("created_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     createdAt: instant("created_at").notNull(),

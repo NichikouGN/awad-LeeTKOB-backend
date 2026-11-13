@@ -1,9 +1,31 @@
 import { Elysia } from "elysia";
 import { openapi } from "@elysia/openapi";
+import { createAuthModule } from "./modules/auth/auth.index";
+import { createUserModule } from "./modules/users/users.index";
+import { UserService } from "./modules/users/users.service";
+import { UserRepository } from "./modules/users/users.repository";
+import { db } from "./db/db";
 
-export const app = new Elysia().use(openapi());
+interface AppDependencies {
+  db?: typeof db;
+  userService?: UserService;
+}
 
+export const createApp = (deps: AppDependencies = {}) => {
+  const database = deps.db ?? db;
+
+  const userRepository = new UserRepository(database);
+  const userService = deps.userService ?? new UserService(userRepository);
+
+  return new Elysia()
+    .use(openapi())
+    .use(createUserModule(userService))
+    .use(createAuthModule(userService));
+};
+
+export const app = createApp();
 export type App = typeof app;
+
 // import {
 //   denyAllAuthenticator,
 //   type Authenticator,

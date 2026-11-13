@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   check,
   foreignKey,
@@ -17,12 +16,13 @@ import {
 import { identity, instant, bytes } from "./_helpers";
 import { users } from "./users.schema";
 import { classes } from "./classes.schema";
+import { uuid } from "drizzle-orm/cockroach-core";
 
 export const labs = pgTable(
   "labs",
   {
     labId: identity("lab_id"),
-    classId: bigint("class_id", { mode: "number" })
+    classId: uuid("class_id")
       .notNull()
       .references(() => classes.classId, { onDelete: "restrict" }),
     title: varchar("title", { length: 160 }).notNull(),
@@ -31,11 +31,11 @@ export const labs = pgTable(
     deadlineAt: instant("deadline_at").notNull(),
     cpuSeconds: smallint("cpu_seconds").notNull().default(1),
     memoryMb: smallint("memory_mb").notNull().default(256),
-    createdByUserId: bigint("created_by_user_id", { mode: "number" })
+    createdByUserId: uuid("created_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     createdAt: instant("created_at").notNull(),
-    updatedByUserId: bigint("updated_by_user_id", { mode: "number" })
+    updatedByUserId: uuid("updated_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     updatedAt: instant("updated_at").notNull(),
@@ -53,13 +53,13 @@ export const labs = pgTable(
 export const labConstraints = pgTable(
   "lab_constraints",
   {
-    labId: bigint("lab_id", { mode: "number" })
+    labId: uuid("lab_id")
       .notNull()
       .references(() => labs.labId, { onDelete: "restrict" }),
     constraintId: varchar("constraint_id", { length: 40 }).notNull(),
     // The logical pointer is validated with the owning constraint in the write transaction.
     // Keeping this as a scalar avoids a circular Drizzle table reference.
-    currentRevisionId: bigint("current_revision_id", { mode: "number" }),
+    currentRevisionId: uuid("current_revision_id"),
     isActive: boolean("is_active").notNull(),
     createdAt: instant("created_at").notNull(),
   },
@@ -73,13 +73,13 @@ export const constraintRevisions = pgTable(
   "constraint_revisions",
   {
     constraintRevisionId: identity("constraint_revision_id"),
-    labId: bigint("lab_id", { mode: "number" }).notNull(),
+    labId: uuid("lab_id").notNull(),
     constraintId: varchar("constraint_id", { length: 40 }).notNull(),
     revisionNumber: integer("revision_number").notNull(),
     text: text("text").notNull(),
     deduction: numeric("deduction", { precision: 4, scale: 2 }).notNull(),
     changeKind: varchar("change_kind", { length: 24 }).notNull(),
-    changedByUserId: bigint("changed_by_user_id", { mode: "number" })
+    changedByUserId: uuid("changed_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     changedAt: instant("changed_at").notNull(),
@@ -117,7 +117,7 @@ export const testCases = pgTable(
   "test_cases",
   {
     testCaseId: identity("test_case_id"),
-    labId: bigint("lab_id", { mode: "number" })
+    labId: uuid("lab_id")
       .notNull()
       .references(() => labs.labId, { onDelete: "restrict" }),
     testNumber: integer("test_number").notNull(),

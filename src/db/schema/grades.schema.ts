@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import {
-  bigint,
   boolean,
   check,
   index,
@@ -16,25 +15,26 @@ import { identity, instant } from "./_helpers";
 import { users } from "./users.schema";
 import { constraintRevisions, labs } from "./labs.schema";
 import { submissions } from "./submissions.schema";
+import { uuid } from "drizzle-orm/cockroach-core";
 
 export const grades = pgTable(
   "grades",
   {
     gradeId: identity("grade_id"),
-    labId: bigint("lab_id", { mode: "number" })
+    labId: uuid("lab_id")
       .notNull()
       .references(() => labs.labId, { onDelete: "restrict" }),
-    studentUserId: bigint("student_user_id", { mode: "number" })
+    studentUserId: uuid("student_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
-    submissionId: bigint("submission_id", { mode: "number" })
+    submissionId: uuid("submission_id")
       .unique()
       .references(() => submissions.submissionId, { onDelete: "restrict" }),
     baseScore: numeric("base_score", { precision: 4, scale: 2 }).notNull(),
     score: numeric("score", { precision: 4, scale: 2 }).notNull(),
     gradeSource: varchar("grade_source", { length: 24 }).notNull(),
     updatedAt: instant("updated_at").notNull(),
-    updatedByUserId: bigint("updated_by_user_id", { mode: "number" }).references(
+    updatedByUserId: uuid("updated_by_user_id").references(
       () => users.userId,
       { onDelete: "restrict" },
     ),
@@ -58,11 +58,11 @@ export const deductions = pgTable(
   "deductions",
   {
     deductionId: identity("deduction_id"),
-    gradeId: bigint("grade_id", { mode: "number" })
+    gradeId: uuid("grade_id")
       .notNull()
       .references(() => grades.gradeId, { onDelete: "restrict" }),
     constraintId: varchar("constraint_id", { length: 40 }).notNull(),
-    constraintRevisionId: bigint("constraint_revision_id", { mode: "number" })
+    constraintRevisionId: uuid("constraint_revision_id")
       .notNull()
       .references(() => constraintRevisions.constraintRevisionId, { onDelete: "restrict" }),
     amount: numeric("amount", { precision: 4, scale: 2 }).notNull(),
@@ -90,17 +90,17 @@ export const appeals = pgTable(
   "appeals",
   {
     appealId: identity("appeal_id"),
-    deductionId: bigint("deduction_id", { mode: "number" })
+    deductionId: uuid("deduction_id")
       .notNull()
       .unique()
       .references(() => deductions.deductionId, { onDelete: "restrict" }),
-    studentUserId: bigint("student_user_id", { mode: "number" })
+    studentUserId: uuid("student_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     explanation: text("explanation").notNull(),
     status: varchar("status", { length: 12 }).notNull().default("pending"),
     createdAt: instant("created_at").notNull(),
-    decidedByUserId: bigint("decided_by_user_id", { mode: "number" }).references(
+    decidedByUserId: uuid("decided_by_user_id").references(
       () => users.userId,
       { onDelete: "restrict" },
     ),
@@ -124,17 +124,17 @@ export const gradeAdjustments = pgTable(
   "grade_adjustments",
   {
     gradeAdjustmentId: identity("grade_adjustment_id"),
-    gradeId: bigint("grade_id", { mode: "number" })
+    gradeId: uuid("grade_id")
       .notNull()
       .references(() => grades.gradeId, { onDelete: "restrict" }),
-    appealId: bigint("appeal_id", { mode: "number" }).references(() => appeals.appealId, {
+    appealId: uuid("appeal_id").references(() => appeals.appealId, {
       onDelete: "restrict",
     }),
     adjustmentType: varchar("adjustment_type", { length: 24 }).notNull(),
     scoreBefore: numeric("score_before", { precision: 4, scale: 2 }).notNull(),
     scoreAfter: numeric("score_after", { precision: 4, scale: 2 }).notNull(),
     reason: text("reason").notNull(),
-    changedByUserId: bigint("changed_by_user_id", { mode: "number" })
+    changedByUserId: uuid("changed_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     createdAt: instant("created_at").notNull(),
@@ -163,10 +163,10 @@ export const gradeAdjustments = pgTable(
 export const labPublications = pgTable(
   "lab_publications",
   {
-    labId: bigint("lab_id", { mode: "number" })
+    labId: uuid("lab_id")
       .primaryKey()
       .references(() => labs.labId, { onDelete: "restrict" }),
-    publishedByUserId: bigint("published_by_user_id", { mode: "number" })
+    publishedByUserId: uuid("published_by_user_id")
       .notNull()
       .references(() => users.userId, { onDelete: "restrict" }),
     publishedAt: instant("published_at").notNull(),
