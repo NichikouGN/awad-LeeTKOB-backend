@@ -10,8 +10,8 @@
     "start": "bun src/index.ts",
     "test": "bun test",
     "lint": "biome lint .",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.jsonc\" \".prettierrc.json\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.jsonc\" \".prettierrc.json\"",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \".prettierrc.json\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \".prettierrc.json\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
