@@ -14,7 +14,7 @@ Own student source intake, receipt time, submission identity/status, selection o
 
 ## Public API contracts
 
-The approved submission and snapshot endpoints are in the [submission contract](../contract/submissions.md). Submission intake and owner-only snapshots are implemented. Requests require an idempotency key scoped to student and lab; same key/source replays the original submission, and same key/different source conflicts. Until the outbox dispatcher and judge worker are added, accepted submissions remain queued. SSE remains proposed in the API inventory and is not part of this implementation slice.
+The approved submission and snapshot endpoints are in the [submission contract](../contract/submissions.md). Submission intake, owner-only snapshots, outbox dispatch, and a separate judge worker are implemented. Requests require an idempotency key scoped to student and lab; same key/source replays the original submission, and same key/different source conflicts. SSE remains proposed in the API inventory and is not part of this implementation slice.
 
 ## Internal service interfaces
 

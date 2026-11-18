@@ -1,0 +1,9 @@
+FROM debian:bookworm-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends g++ coreutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 judge \
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin judge
+USER 10001:10001
+WORKDIR /work
+CMD ["sleep", "infinity"]

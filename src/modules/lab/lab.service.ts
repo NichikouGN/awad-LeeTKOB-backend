@@ -217,7 +217,10 @@ export class LabService implements LabSubmissionProvider {
       classId: record.classId,
       statement: record.statement,
       limits: { cpuSeconds: record.cpuSeconds, memoryMb: record.memoryMb },
-      constraints: record.constraints,
+      constraints: record.constraints.map((constraint) => ({
+        ...constraint,
+        deduction: Number(constraint.deduction),
+      })),
       tests: record.tests.map((test) => ({
         testNumber: test.testNumber,
         input: test.input.toString("utf8"),

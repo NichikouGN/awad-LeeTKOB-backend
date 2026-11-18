@@ -84,3 +84,23 @@ repository checks.
   only records durable work; a separate worker and sandbox are the next slice.
 
 See F-01 through F-04 for the earlier implementation findings and decisions.
+
+### P-04 — Durable judge queue and sandbox
+
+> ok before you said the bullMQ stuff isnt wired yet so can you help me continue with that part
+
+Scope: connect the transactional PostgreSQL outbox to BullMQ with post-commit
+notification and recovery scans, then run a separate judge consumer using the
+existing worker and sandbox boundaries.
+
+### Changed / Rejected
+
+- **Changed:** added a PostgreSQL `NOTIFY` trigger, an outbox dispatcher that
+  queues stable judge job IDs, periodic PostgreSQL reconciliation, a BullMQ
+  consumer, and a separate worker entrypoint. The judge repository claims work
+  with leases and commits test results with the submission status. Added an
+  opt-in PostgreSQL/Redis integration test that commits a job while the
+  consumer is stopped, restarts it, and asserts one stored result.
+- **Rejected:** dispatching directly from the submission HTTP handler or using
+  Redis as the durable source of truth. PostgreSQL remains authoritative and
+  reconstructs queue work after notifications or Redis jobs are lost.

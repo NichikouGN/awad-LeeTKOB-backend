@@ -3,12 +3,14 @@
   "version": "1.0.50",
   "scripts": {
     "db:generate": "npx drizzle-kit generate",
-    "db:migrate": "npx drizzle-kit migrate",
+    "db:migrate": "bunx drizzle-kit migrate && bun run src/db/migrations/apply-outbox-notify.ts",
     "db:seed": "bun run src/db/seed.ts",
-    "db:start": "docker compose down -v && docker compose up -d && sleep 5 && bun run db:migrate && bun run db:seed",
+    "db:start": "docker compose down -v && bun run db:generate && docker compose up -d && sleep 5 && bun run db:migrate && bun run db:seed",
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
+    "worker": "bun src/worker.ts",
     "test": "bun test",
+    "test:queue:integration": "JUDGE_QUEUE_INTEGRATION=1 bun test test/judging.queue.integration.test.ts",
     "lint": "biome lint .",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \".prettierrc.json\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \".prettierrc.json\"",
@@ -18,9 +20,11 @@
     "@elysia/html": "^1.4.1",
     "@elysia/jwt": "^2.0.0-rc.0",
     "@elysia/openapi": "^2.0.0-rc.1",
+    "bullmq": "^6.7.7",
     "dotenv": "^18.0.10",
     "drizzle-orm": "^1.0.0-rc.5",
     "elysia": "^2.0.0-rc.3",
+    "ioredis": "^6.0.0",
     "pg": "^8.23.1"
   },
   "devDependencies": {

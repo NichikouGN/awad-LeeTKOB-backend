@@ -29,3 +29,13 @@ jobs:
         run: bun run typecheck
       - name: Tests
         run: bun test
+      - name: Start PostgreSQL and Redis with migrations
+        run: cp .env.example .env && bun run db:start
+      - name: Outbox and BullMQ restart recovery test
+        run: bun run test:queue:integration
+      - name: Build isolated C++ judge image
+        run: docker build -f Dockerfile.judge -t leetkob-cpp-sandbox:local .
+      - name: Sandbox attack tests
+        env:
+          DOCKER_SANDBOX_TESTS: "1"
+        run: bun test test/sandbox/docker-sandbox.test.ts

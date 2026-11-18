@@ -69,3 +69,14 @@ export interface LabActor {
   userId: string;
   role: LabRole;
 }
+
+export interface LabJudgeProvider {
+  getJudgeBundle(labId: string): Promise<{
+    labId: string;
+    classId: string;
+    statement: string;
+    limits: { cpuSeconds: number; memoryMb: number };
+    constraints: Array<{ id: string; text: string; deduction: number }>;
+    tests: Array<{ testNumber: number; input: string; expectedOutput: string }>;
+  } | null>;
+}

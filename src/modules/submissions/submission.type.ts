@@ -27,3 +27,10 @@ export interface QueueSubmissionRecord {
   sourceBytes: number;
   receivedAt: Date;
 }
+
+export interface SubmissionJudgeSourceProvider {
+  getJudgeSource(submissionId: string): Promise<{
+    labId: string;
+    sourceCode: Buffer;
+  } | null>;
+}

@@ -24,6 +24,10 @@ export interface SubmissionRepository {
     submissionId: string,
     studentUserId: string,
   ): Promise<SubmissionSnapshotRecord | null>;
+  getJudgeSource(submissionId: string): Promise<{
+    labId: string;
+    sourceCode: Buffer;
+  } | null>;
 }
 
 export class DrizzleSubmissionRepository implements SubmissionRepository {
@@ -110,6 +114,15 @@ export class DrizzleSubmissionRepository implements SubmissionRepository {
       .limit(1);
     if (!row) return null;
     return this.toSnapshot(row, await this.getTestResults(row.submissionId));
+  }
+
+  async getJudgeSource(submissionId: string) {
+    const [record] = await this.db
+      .select({ labId: submissions.labId, sourceCode: submissions.sourceCode })
+      .from(submissions)
+      .where(eq(submissions.submissionId, submissionId))
+      .limit(1);
+    return record ?? null;
   }
 
   private async getTestResults(submissionId: string) {

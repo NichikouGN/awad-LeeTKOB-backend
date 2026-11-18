@@ -17,8 +17,9 @@ student source, enforce class membership and the lab window, and atomically
 persist the submission, judge job, and outbox event. A student can read their
 own submission snapshot. The lab service exposes submission policy and a
 judge-only test bundle to trusted module consumers. The outbox dispatcher,
-judge worker, sandbox, model review, publish, and appeal workflows are not yet
-wired; the PA2 publish contract remains a contract, not a working route.
+BullMQ consumer, judge worker, and Docker sandbox are wired as a separate
+process. Model review, publish, and appeal workflows are not yet wired; the
+PA2 publish contract remains a contract, not a working route.
 Additional module and schema files do not imply those end-to-end workflows run.
 
 Some implementation choices now replace open design decisions: the app uses
@@ -67,7 +68,7 @@ flowchart TB
   Workers --> Modules
 ```
 
-The diagram shows logical dependencies, not a mandated repository layout. The selected final-system shape is a Bun/TypeScript/Elysia modular monolith, PostgreSQL source of truth, PostgreSQL transactional outbox, BullMQ workers on Redis, Docker-based isolated judging, and SSE for submission updates. The current app does not include the outbox dispatcher, BullMQ/Redis integration, SSE endpoint, or worker consumers. Workers may initially run in the same deployable application, but outside request handling and through the same module interfaces. Redis/BullMQ is not the source of truth: committed outbox and domain state in PostgreSQL allow queue work to be redispatched after Redis loss. Workers publish status notifications only after committing state; SSE subscribers use PostgreSQL snapshots on connect/reconnect and Redis notifications for live updates.
+The diagram shows logical dependencies, not a mandated repository layout. The selected final-system shape is a Bun/TypeScript/Elysia modular monolith, PostgreSQL source of truth, PostgreSQL transactional outbox, BullMQ workers on Redis, Docker-based isolated judging, and SSE for submission updates. The outbox dispatcher and judge worker run in a separate process; the SSE endpoint is not implemented. Redis/BullMQ is not the source of truth: committed outbox and domain state in PostgreSQL allow queue work to be redispatched after Redis loss. Workers publish status notifications only after committing state; SSE subscribers use PostgreSQL snapshots on connect/reconnect and Redis notifications for live updates.
 
 ## 3. Runtime layers
 
@@ -81,17 +82,17 @@ Elysia's feature-based organization, `app.ts` composition, separate listening en
 
 ## 4. Module map and ownership
 
-| Module | Owns | Main collaborators |
-|---|---|---|
-| Auth | Credential verification and authenticated principal projection | All HTTP modules; identity provider adapter. |
-| Classes | Class, TA assignment, student membership, invite code | Auth, Labs. |
-| Labs | Lab lifecycle, constraints/revisions, private tests and limits | Classes, Submissions, Review/Grades. |
-| Submissions | Accepted submission records, counted-submission selection, student-safe result projection | Classes, Labs, Judging, Review/Grades. |
-| Judging | Job lifecycle and judge result normalization | Submissions, Labs, Queue and sandbox adapters. |
-| Constraint Review | Hard-check/model orchestration, proposal/evidence validation, sampling, spend | Labs, Submissions, Review/Grades, model adapter. |
-| Reviews and Grades | TA decisions, final deductions, score calculation, publication | Labs, Submissions, Constraint Review, Audit. |
-| Appeals | Appeal eligibility and decisions; score adjustment request | Reviews and Grades, Audit. |
-| Audit | Append-only audit recording and authorized query policy | Modules that record consequential actions. |
+| Module             | Owns                                                                                      | Main collaborators                               |
+| ------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Auth               | Credential verification and authenticated principal projection                            | All HTTP modules; identity provider adapter.     |
+| Classes            | Class, TA assignment, student membership, invite code                                     | Auth, Labs.                                      |
+| Labs               | Lab lifecycle, constraints/revisions, private tests and limits                            | Classes, Submissions, Review/Grades.             |
+| Submissions        | Accepted submission records, counted-submission selection, student-safe result projection | Classes, Labs, Judging, Review/Grades.           |
+| Judging            | Job lifecycle and judge result normalization                                              | Submissions, Labs, Queue and sandbox adapters.   |
+| Constraint Review  | Hard-check/model orchestration, proposal/evidence validation, sampling, spend             | Labs, Submissions, Review/Grades, model adapter. |
+| Reviews and Grades | TA decisions, final deductions, score calculation, publication                            | Labs, Submissions, Constraint Review, Audit.     |
+| Appeals            | Appeal eligibility and decisions; score adjustment request                                | Reviews and Grades, Audit.                       |
+| Audit              | Append-only audit recording and authorized query policy                                   | Modules that record consequential actions.       |
 
 Modules own their persistence queries. No module reads or writes another module's tables through a shared database client as a shortcut. A transaction coordinator may span repositories for a documented atomic use case, but it must not move ownership of the rules.
 
@@ -111,16 +112,16 @@ TA decisions are stored as final `pass` or `violation`; violation requires exact
 
 ## 6. Technology and deployment choices
 
-| Concern | Current direction | Status |
-|---|---|---|
-| Runtime/language | Bun and TypeScript | Required project stack. |
-| HTTP | Elysia 2.0 RC | Required project stack; follow documented feature-based patterns where applicable. |
-| Database | PostgreSQL | Selected for the final product. |
-| Durable work | PostgreSQL transactional outbox dispatches idempotent jobs to BullMQ on Redis; worker consumers execute judging/review | Final-system target; tables are declared, dispatcher/queue/consumers are not implemented. Configure Redis persistence, bounded concurrency, and recovery from PostgreSQL state. |
-| C++ execution | Docker-based isolated runner | Selected approach; exact runner setup remains gated on proof of all required restrictions. |
-| Live updates | SSE status stream plus GET snapshot | Selected; event replay is not required. Reconnect by fetching the current snapshot and reopening the stream. |
-| Model | Structured-output provider behind adapter | Provider/model remain open; set provider-side and application spend ceiling. |
-| Testing | `bun test`, deterministic fakes | No real model call in unit or contract tests. |
+| Concern          | Current direction                                                                                                     | Status                                                                                                                                                   |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime/language | Bun and TypeScript                                                                                                    | Required project stack.                                                                                                                                  |
+| HTTP             | Elysia 2.0 RC                                                                                                         | Required project stack; follow documented feature-based patterns where applicable.                                                                       |
+| Database         | PostgreSQL                                                                                                            | Selected for the final product.                                                                                                                          |
+| Durable work     | PostgreSQL transactional outbox dispatches idempotent judge jobs to BullMQ on Redis; worker consumers execute judging | Judge path implemented. Review queue consumers remain future work. Configure Redis persistence, bounded concurrency, and recovery from PostgreSQL state. |
+| C++ execution    | Docker-based isolated runner                                                                                          | Selected approach; exact runner setup remains gated on proof of all required restrictions.                                                               |
+| Live updates     | SSE status stream plus GET snapshot                                                                                   | Selected; event replay is not required. Reconnect by fetching the current snapshot and reopening the stream.                                             |
+| Model            | Structured-output provider behind adapter                                                                             | Provider/model remain open; set provider-side and application spend ceiling.                                                                             |
+| Testing          | `bun test`, deterministic fakes                                                                                       | No real model call in unit or contract tests.                                                                                                            |
 
 ## 7. Architecture acceptance criteria
 

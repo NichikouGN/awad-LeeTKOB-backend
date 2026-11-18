@@ -4,12 +4,13 @@
 
 Own durable judge-job lifecycle, worker claims, sandbox adapter invocation, verdict normalization, and per-test results. It does not accept HTTP submissions or run C++ in an Elysia handler.
 
-The current app does not include this queue/worker workflow. The Drizzle
-schema declares `judge_jobs`, `test_results`, and `outbox_events`; no dispatcher,
-BullMQ/Redis integration, or worker consumer is currently wired. The final
-system uses BullMQ backed by Redis with PostgreSQL outbox dispatch. Preserve
-the queue adapter boundary and make PostgreSQL job state sufficient to
-reconstruct work after Redis loss.
+Submission intake writes `judge_jobs` and `outbox_events` in the same database
+transaction. A PostgreSQL trigger issues a transactional `NOTIFY`; the
+dispatcher listens, reads pending rows, and adds stable job IDs to BullMQ on
+Redis. Startup and periodic reconciliation recover missed notifications and
+rebuild queue work from PostgreSQL. A separate consumer claims the matching
+PostgreSQL job, runs the sandbox, and persists the result before acknowledging
+the BullMQ message.
 
 ## Responsibilities
 
