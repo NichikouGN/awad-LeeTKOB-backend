@@ -14,8 +14,11 @@ credentials. Stable types used here are `validation` (400),
 `authentication-required` (401), `forbidden` (403), `not-found` (404),
 `conflict` (409), and `internal` (500).
 
-All protected routes require a valid access JWT. The server derives the actor
-ID and role from its verified claims; request fields never select the actor.
+All protected routes require a valid access JWT. The server verifies the token
+and confirms that its user still exists, is `ACTIVE`, and has the role in the
+token. Disabled accounts and tokens with a stale role return `401`. The server
+derives the actor ID and role from this verified state; request fields never
+select the actor.
 
 ## Existing account routes
 
