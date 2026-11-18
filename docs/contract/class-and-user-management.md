@@ -109,7 +109,8 @@ Invitation codes are not included in this response. Errors: `400`, `401`,
 
 Admin only. Request: `{ "className": "Intro to Programming" }`.
 `className` is trimmed and must contain 1–120 characters. The service creates
-the class and a six-digit invitation code.
+the class and a unique six-digit invitation code. If a code collision occurs,
+the service generates another code before inserting the class.
 
 `201 Created`:
 
