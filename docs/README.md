@@ -24,6 +24,7 @@ The approved [`POST /api/v1/labs/{labId}/publish`](contract/post-lab-publish.md)
 | [API contract inventory](planning/api-contracts.md) | Proposed public API surface and contract decisions still to resolve. |
 | [Publish contract](contract/post-lab-publish.md) | Approved client contract for lab publication. |
 | [Final publish contract](contract/post-lab-publish-v2.md) | Final-product publish gate requiring successful judging and completed review before publication. |
+| [Lab authoring contract](contract/labs.md) | PA3 lab creation, discovery, visibility, and downstream policy capabilities. |
 | [Basic auth, user, and class contract](contract/class-and-user-management.md) | Account lifecycle and the minimum class setup/membership routes implemented for PA3 preparation. |
 | [Project proposal](planning/project-proposal.md) | Product summary, original FR/NFR identifiers, architecture choice, and open decisions. |
 
