@@ -17,6 +17,33 @@ credentials. Stable types used here are `validation` (400),
 All protected routes require a valid access JWT. The server derives the actor
 ID and role from its verified claims; request fields never select the actor.
 
+## Existing account routes
+
+These routes are part of the same minimum account/class setup surface. Signup
+is self-service and always creates a `STU`; an admin promotes accounts to
+`TA` through the role route below. The first admin account is provisioned by
+deployment/seed configuration.
+
+- `POST /auth/signup` accepts `{ "email", "password", "displayName" }` and
+  creates a student account. Returns `201` with a success message. Duplicate
+  email returns `409`.
+- `POST /auth/login` accepts `{ "email", "password" }`; returns access and
+  refresh tokens plus the safe user projection. Invalid credentials return
+  `401`; disabled accounts return `403`.
+- `GET /auth/refresh` requires a valid refresh JWT and returns a new access
+  token. Invalid or expired refresh credentials return `401`.
+- `GET /profile` returns the caller's safe profile. It never returns a
+  password hash.
+- `PATCH /users/{userId}/edit` updates only the authenticated user's display
+  name. A caller cannot edit another user's profile; mismatch returns `403`.
+- `PATCH /users/{userId}/role` is admin-only, cannot change the admin's own
+  role, and accepts `TA` or `STU`.
+- `PATCH /users/{userId}/status` is admin-only and cannot disable the current
+  admin account. It accepts `ACTIVE` or `DISABLED`.
+
+These routes use the shared RFC 9457 error format above. All user-facing
+projections omit password hashes and authentication secrets.
+
 ## `GET /users`
 
 Admin only. Returns a paginated user list so an administrator can promote a
