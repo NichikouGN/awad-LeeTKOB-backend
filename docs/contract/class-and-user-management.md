@@ -28,11 +28,13 @@ is self-service and always creates a `STU`; an admin promotes accounts to
 deployment/seed configuration.
 
 - `POST /auth/signup` accepts `{ "email", "password", "displayName" }` and
-  creates a student account. Returns `201` with a success message. Duplicate
-  email returns `409`.
+  creates a student account. Email is trimmed and lowercased before lookup and
+  storage. Returns `201` with a success message. Duplicate email returns
+  `409`.
 - `POST /auth/login` accepts `{ "email", "password" }`; returns access and
-  refresh tokens plus the safe user projection. Invalid credentials return
-  `401`; disabled accounts return `403`.
+  refresh tokens plus the safe user projection. Email is trimmed and
+  lowercased before lookup. Invalid credentials return `401`; disabled
+  accounts return `403`.
 - `GET /auth/refresh` requires a valid refresh JWT and returns a new access
   token. Invalid or expired refresh credentials return `401`.
 - `GET /profile` returns the caller's safe profile. It never returns a
