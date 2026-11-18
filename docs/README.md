@@ -6,7 +6,7 @@ This directory documents the LeeTKOB lab grading system. All product documentati
 
 Use the brief for mandatory product requirements; the FAQ clarifies behavior the brief leaves open, and the brief wins if those two conflict. For a specific public endpoint, its approved endpoint contract is the source of truth for client-visible behavior. If that contract appears inconsistent with a mandatory product rule, resolve the discrepancy explicitly by revising the contract before changing implementation behavior; do not silently choose one interpretation. Planning and architecture documents describe intended design and cannot override either source.
 
-The approved [`POST /api/v1/labs/{labId}/publish`](contract/post-lab-publish.md) contract documents the PA2 milestone behavior. The final-product contract is [`POST /api/v2/labs/{labId}/publish`](contract/post-lab-publish-v2.md), which adds the complete judging/review gate; preserve v1 for its compatibility lifetime. The other routes in [`planning/api-contracts.md`](planning/api-contracts.md) are proposed until approved as endpoint contracts. `IA#3_CONTRACT.md` and its rubric describe a separate individual assignment and are not LeeTKOB product requirements.
+The approved [`POST /api/v1/labs/{labId}/publish`](contract/post-lab-publish.md) contract documents the PA2 milestone behavior. The final-product contract is [`POST /api/v2/labs/{labId}/publish`](contract/post-lab-publish-v2.md), which adds the complete judging/review gate; preserve v1 for its compatibility lifetime. The lab authoring routes are specified in [`contract/labs.md`](contract/labs.md). Routes in [`planning/api-contracts.md`](planning/api-contracts.md) without a dedicated contract remain proposed until approved. `IA#3_CONTRACT.md` and its rubric describe a separate individual assignment and are not LeeTKOB product requirements.
 
 ## Document map
 
@@ -25,6 +25,7 @@ The approved [`POST /api/v1/labs/{labId}/publish`](contract/post-lab-publish.md)
 | [Publish contract](contract/post-lab-publish.md) | Approved client contract for lab publication. |
 | [Final publish contract](contract/post-lab-publish-v2.md) | Final-product publish gate requiring successful judging and completed review before publication. |
 | [Lab authoring contract](contract/labs.md) | PA3 lab creation, discovery, visibility, and downstream policy capabilities. |
+| [Submission contract](contract/submissions.md) | Student submission acceptance, idempotency, durable judge handoff, and owner-only status. |
 | [Basic auth, user, and class contract](contract/class-and-user-management.md) | Account lifecycle and the minimum class setup/membership routes implemented for PA3 preparation. |
 | [Project proposal](planning/project-proposal.md) | Product summary, original FR/NFR identifiers, architecture choice, and open decisions. |
 

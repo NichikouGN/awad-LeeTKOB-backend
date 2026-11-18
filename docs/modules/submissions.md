@@ -14,7 +14,7 @@ Own student source intake, receipt time, submission identity/status, selection o
 
 ## Public API contracts
 
-Proposed `POST /api/v1/labs/{labId}/submissions`, snapshot `GET /api/v1/submissions/{submissionId}`, and SSE `GET /api/v1/submissions/{submissionId}/events` are in [submission endpoints](../planning/api-contracts.md#4-submission-endpoints). The successful create response is asynchronous. Submission requests require an idempotency key scoped to student and lab; same key/source replays the original response, and same key/different source conflicts. The final endpoint contract still needs approval before implementation.
+The approved submission and snapshot endpoints are in the [submission contract](../contract/submissions.md). Submission requests require an idempotency key scoped to student and lab; same key/source replays the original submission, and same key/different source conflicts. SSE remains proposed in the API inventory and is not part of this implementation slice.
 
 ## Internal service interfaces
 
