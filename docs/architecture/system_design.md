@@ -9,14 +9,14 @@ The system still uses asynchronous durable jobs for expensive or isolated work. 
 ### Current implementation status
 
 The target architecture and workflows in this document remain the final-system
-design. The current `src/app.ts` mounts auth, user, and class modules only. The
-available routes cover signup/login/refresh, profile and admin user management,
-class list/detail/create, TA assignment, staff enrollment, and student join by
-invitation code. Lab authoring, submission, judging, model review, publish,
-and appeal routes are not currently mounted; the PA2 publish contract is a
-contract, not a working route. The repository contains additional module and
-schema files, but their presence is not evidence that those end-to-end
-workflows run.
+design. The current `src/app.ts` mounts auth, user, class, and lab modules. Lab
+routes create a lab, list labs in a visible class, and return a student-safe
+lab detail. Creation persists the initial constraints, constraint revisions,
+and private tests in one transaction. The lab service also exposes submission
+policy and judge-bundle capabilities for downstream modules. Submission,
+judging, model review, publish, and appeal routes/workers are not yet wired;
+the PA2 publish contract remains a contract, not a working route. Additional
+module and schema files do not imply those end-to-end workflows run.
 
 Some implementation choices now replace open design decisions: the app uses
 email/password credentials with Bun bcrypt hashing and signed access/refresh

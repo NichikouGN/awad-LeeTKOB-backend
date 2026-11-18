@@ -1,14 +1,16 @@
 # LeeTKOB backend
 
 LeeTKOB backend built with Bun, TypeScript, Elysia 2.0 RC, Drizzle, and
-PostgreSQL. The current application mounts authentication, user, and class
-routes. Its persistence and auth code are real implementations, not just
-replaceable stubs: users authenticate with email/password and JWTs, and the
+PostgreSQL. The current application mounts authentication, user, class, and
+initial lab-authoring routes. Its persistence and auth code are real
+implementations, not just replaceable stubs: users authenticate with
+email/password and JWTs, and the
 database stores bcrypt password hashes. See [current implementation status](docs/architecture/system_design.md#current-implementation-status).
 
 The PA2 publish endpoint exists as a contract, but its handler is not mounted
-in `src/app.ts`. Lab authoring, submissions, judging, model review, publication,
-and appeals are not end-to-end features in the current application. The
+in `src/app.ts`. Lab creation and discovery are implemented; submissions,
+judging, model review, publication, and appeals are not end-to-end features in
+the current application. The
 database declares tables for much of that target workflow; declarations do not
 mean the routes, workers, migrations, or integrations exist. The final-product
 design uses a durable queue, transactional outbox, isolated judging, and model

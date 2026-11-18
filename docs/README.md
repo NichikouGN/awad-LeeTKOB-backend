@@ -38,7 +38,7 @@ PostgreSQL, BullMQ/Redis, the transactional outbox, Docker-based judging, and SS
 
 The PA2 and PA3 rubric PDFs at the repository root are milestone evaluation
 criteria, not evidence that a feature is implemented. The current app composes
-auth, user, and class routes; see [system design](architecture/system_design.md)
+auth, user, class, and initial lab-authoring routes; see [system design](architecture/system_design.md)
 for concrete route and behavior gaps. The final-system documents remain the
 target architecture, with current implementation choices and deviations called
 out where relevant. [`FAQ.md`](../FAQ.md) is the developer's product-decision

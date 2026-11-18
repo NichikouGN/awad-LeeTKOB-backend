@@ -13,11 +13,11 @@ Own lab authoring, schedule and lifecycle policy, constraints/revisions, private
 
 ## Public API contracts
 
-Proposed create/list/get/edit operations appear under [lab endpoints](../planning/api-contracts.md#3-lab-endpoints). Status is scheduled/open/closed/published, with schedule-derived open and closed states; only scheduled labs are editable, and the initial product has no delete route. Student view must omit tests; TA view may include them only after ownership check. Any proposed route behavior must be reconciled with the final publish contract before implementation.
+The approved PA3 create/list/get behavior is in the [lab authoring contract](../contract/labs.md). Creation, class-scoped listing, and a test-free lab detail are implemented. Editing and deletion are not part of this contract. Lab status is schedule-derived as scheduled/open/closed; publication is a later lifecycle transition.
 
 ## Internal service interfaces
 
-Expose separate capabilities rather than one broad service: student-safe lab projection, TA management operations, submission policy lookup, and judge-only test bundle. Caller identity/role and class ownership are explicit inputs or verified principal data. Consumers never query lab tables directly.
+Expose separate capabilities rather than one broad service: student-safe lab projection, TA creation, submission policy lookup, and judge-only test bundle. Caller identity/role and class ownership are explicit inputs or verified principal data. Consumers never query lab tables directly.
 
 ## Data
 

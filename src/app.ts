@@ -10,11 +10,15 @@ import { ClassRepository } from "./modules/class/class.repository";
 import { UserRepository } from "./modules/user/user.repository";
 import { UserService } from "./modules/user/user.service";
 import { ClassService } from "./modules/class/class.service";
+import { createLabModule } from "./modules/lab";
+import { DrizzleLabRepository } from "./modules/lab/repository";
+import { LabService } from "./modules/lab/service";
 
 interface AppDependencies {
   db?: typeof db;
   userService?: UserService;
   classService?: ClassService;
+  labService?: LabService;
 }
 const loadEnv = (name: string) => {
   const env = process.env[name];
@@ -37,6 +41,9 @@ export const createApp = (deps: AppDependencies = {}) => {
   const classRepository = new ClassRepository(database);
   const classService =
     deps.classService ?? new ClassService(classRepository, userService);
+  const labRepository = new DrizzleLabRepository(database);
+  const labService =
+    deps.labService ?? new LabService(labRepository, classService);
 
   return new Elysia()
     .use(openapi())
@@ -59,7 +66,8 @@ export const createApp = (deps: AppDependencies = {}) => {
         classService: classService,
         jwtAuth: jwtPlugins.jwtAuth,
       }),
-    );
+    )
+    .use(createLabModule({ labService, jwtAuth: jwtPlugins.jwtAuth }));
 };
 
 export const app = createApp();

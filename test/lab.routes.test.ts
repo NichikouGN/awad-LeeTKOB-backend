@@ -89,7 +89,9 @@ describe("lab routes", () => {
 
     expect(response.status).toBe(201);
     expect(response.headers.get("location")).toBe(`/labs/${labId}`);
-    expect(await response.json()).toMatchObject({ lab: { labId, title: "Sorting lab" } });
+    expect(await response.json()).toMatchObject({
+      lab: { labId, title: "Sorting lab" },
+    });
     expect(labService.create).toHaveBeenCalledWith(
       expect.objectContaining({ classId, userId: "ta-id", role: "TA" }),
     );
@@ -127,7 +129,11 @@ describe("lab routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ labs: [lab], page: 1, limit: 20 });
+    expect(await response.json()).toMatchObject({
+      labs: [lab],
+      page: 1,
+      limit: 20,
+    });
     expect(labService.listByClass).toHaveBeenCalledWith({
       classId,
       userId: "student-id",

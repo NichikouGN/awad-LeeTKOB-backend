@@ -6,7 +6,10 @@ import type { ClassProvider } from "../src/modules/class/interface/class-provide
 
 const classId = "64d0d19a-73e8-4d19-bae2-1d6c0f10f397";
 const labId = "64d0d19e-73e8-4d19-bae2-1d6c0f10f397";
-const actor = { userId: "9b7bdf70-9740-48a1-a7bb-0875a9103a73", role: "TA" as const };
+const actor = {
+  userId: "9b7bdf70-9740-48a1-a7bb-0875a9103a73",
+  role: "TA" as const,
+};
 const request = {
   ...actor,
   classId,
@@ -29,12 +32,20 @@ const savedLab = {
   cpuSeconds: 1,
   memoryMb: 256,
   constraints: [{ id: "C1", text: "Use merge sort.", deduction: "3.00" }],
-  tests: [{ testNumber: 1, input: Buffer.from("3\n3 1 2\n"), expectedOutput: Buffer.from("1 2 3\n") }],
+  tests: [
+    {
+      testNumber: 1,
+      input: Buffer.from("3\n3 1 2\n"),
+      expectedOutput: Buffer.from("1 2 3\n"),
+    },
+  ],
   createdAt: new Date("2026-11-18T10:00:00.000Z"),
   updatedAt: new Date("2026-11-18T10:00:00.000Z"),
 };
 
-const makeService = (options: { classError?: Error; lab?: typeof savedLab | null } = {}) => {
+const makeService = (
+  options: { classError?: Error; lab?: typeof savedLab | null } = {},
+) => {
   const classProvider = {
     getClassDetail: mock(async () => {
       if (options.classError) throw options.classError;
@@ -43,7 +54,9 @@ const makeService = (options: { classError?: Error; lab?: typeof savedLab | null
   };
   const repository = {
     create: mock(async () => savedLab),
-    findById: mock(async () => options.lab === undefined ? savedLab : options.lab),
+    findById: mock(async () =>
+      options.lab === undefined ? savedLab : options.lab,
+    ),
     listByClass: mock(async () => [savedLab]),
   };
   return {
@@ -69,7 +82,10 @@ describe("lab authoring service", () => {
       role: "TA",
     });
     expect(repository.create).toHaveBeenCalledWith(
-      expect.objectContaining({ title: "Sorting lab", createdByUserId: actor.userId }),
+      expect.objectContaining({
+        title: "Sorting lab",
+        createdByUserId: actor.userId,
+      }),
     );
     expect(created.title).toBe("Sorting lab");
     expect(created.constraints).toEqual([
@@ -97,7 +113,9 @@ describe("lab authoring service", () => {
       classError: new AppError(404, "Class not found"),
     });
 
-    await expect(service.create(request)).rejects.toMatchObject({ status: 404 });
+    await expect(service.create(request)).rejects.toMatchObject({
+      status: 404,
+    });
     expect(repository.create).not.toHaveBeenCalled();
   });
 
