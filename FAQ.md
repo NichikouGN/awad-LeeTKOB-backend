@@ -1,12 +1,19 @@
-# LeeTKOB FAQ
+# LeeTKOB Product Decisions (Developer Reference)
 
-Câu trả lời của product owner cho những chỗ class brief chưa nói tới. "Brief" là *LeeTKOB — the class project brief* đính kèm trên Classroom; nếu FAQ và brief mâu thuẫn thì theo brief. Cách hỏi và cách trích dẫn: xem [`README.md`](README.md).
+This file records product-owner clarifications for the developer implementing
+LeeTKOB. It is a working reference for coding and documentation decisions; it
+is not an end-user FAQ and is not intended to answer a student's support
+question. "Brief" means *LeeTKOB — the class project brief* attached in
+Classroom. If a clarification here conflicts with the brief, follow the brief.
 
-**Trước khi hỏi:** tìm trong bảng *Tra nhanh* bên dưới, hoặc bấm `Ctrl+F` (`Cmd+F` trên Mac) và gõ một từ khoá, tiếng Việt hay tiếng Anh đều được (ví dụ `nộp lại`, `unsure`, `publish`). Mỗi mục có một dòng **Từ khoá** để dễ tìm. Không thấy câu của bạn thì hỏi dưới bài ghim trên group Facebook.
+Use the quick index or `Ctrl+F` (`Cmd+F` on Mac) to find a product behavior
+while implementing it. Each item includes keywords for code and documentation
+searches. Ask the product owner/instructor for unresolved product decisions;
+do not present this implementation reference as user-facing support content.
 
 **Về mã FAQ:** mã được cấp theo thứ tự tạo và không bao giờ đổi, để link trích dẫn không bị gãy. Các mục được xếp theo chủ đề, nên mục mới (ví dụ FAQ-15) có thể nằm giữa các mục cũ.
 
-## Tra nhanh
+## Quick index
 
 | Bạn muốn biết | Xem |
 |---|---|
@@ -25,7 +32,7 @@ Câu trả lời của product owner cho những chỗ class brief chưa nói t�
 | Khiếu nại: được gì, hạn bao lâu | [FAQ-13](#faq-13) |
 | Khiếu nại bị bác có mở lại được không | [FAQ-14](#faq-14) |
 
-## Thuật ngữ dùng trong FAQ
+## Product terms used in these decisions
 
 - **Lab:** một bài tập TA giao cho một lớp, có đề, bộ test, ràng buộc và hạn nộp.
 - **Ba mốc của một lab:** **mở nhận bài** (sinh viên bắt đầu nộp được) → **hết hạn nộp** → **công bố điểm** (TA bấm Publish, sinh viên thấy điểm).

@@ -6,6 +6,35 @@ LeeTKOB is a modular monolith: one Bun/TypeScript application using Elysia 2.0 R
 
 The system still uses asynchronous durable jobs for expensive or isolated work. “Modular monolith” describes the application and module boundaries; it does not mean compiling untrusted code in an HTTP request or in the API handler.
 
+### Current implementation status
+
+The target architecture and workflows in this document remain the final-system
+design. The current `src/app.ts` mounts auth, user, and class modules only. The
+available routes cover signup/login/refresh, profile and admin user management,
+class list/detail/create, TA assignment, staff enrollment, and student join by
+invitation code. Lab authoring, submission, judging, model review, publish,
+and appeal routes are not currently mounted; the PA2 publish contract is a
+contract, not a working route. The repository contains additional module and
+schema files, but their presence is not evidence that those end-to-end
+workflows run.
+
+Some implementation choices now replace open design decisions: the app uses
+email/password credentials with Bun bcrypt hashing and signed access/refresh
+JWTs; Drizzle uses a `pg` pool configured by `DATABASE_URL`; and roles are
+`ADMIN`, `TA`, and `STU`. These choices are reflected in the auth and database
+specifications. Protected requests re-check current account status and role.
+Signup is public and creates a student; the deployment must seed its first
+admin. User listing is admin-only, and profile edits are restricted to the
+authenticated account. Class lists and detail enforce active class
+relationships. Route errors use RFC 9457 problem details with safe generic
+details for unexpected failures.
+
+`src/app.ts` also reads `JWT_ACCESS_TOKEN` and `JWT_REFRESH_TOKEN` while the
+module is constructed, so these values must be set to import/create the
+application. `src/db/db.ts` warns when `DATABASE_URL` is absent but still
+constructs a pool. These are current startup behaviors, not target deployment
+recommendations.
+
 ## 2. Logical architecture
 
 ```mermaid
@@ -35,7 +64,7 @@ flowchart TB
   Workers --> Modules
 ```
 
-The diagram shows logical dependencies, not a mandated repository layout. The selected application shape is a Bun/TypeScript/Elysia modular monolith, PostgreSQL source of truth, PostgreSQL transactional outbox, BullMQ workers on Redis, Docker-based isolated judging, and SSE for submission updates. The current PA2 project does not yet include the outbox dispatcher, queue, SSE endpoint, or worker consumers. Workers may initially run in the same deployable application, but outside request handling and through the same module interfaces. Redis/BullMQ is not the source of truth: committed outbox and domain state in PostgreSQL allow queue work to be redispatched after Redis loss. Workers publish status notifications only after committing state; SSE subscribers use PostgreSQL snapshots on connect/reconnect and Redis notifications for live updates.
+The diagram shows logical dependencies, not a mandated repository layout. The selected final-system shape is a Bun/TypeScript/Elysia modular monolith, PostgreSQL source of truth, PostgreSQL transactional outbox, BullMQ workers on Redis, Docker-based isolated judging, and SSE for submission updates. The current app does not include the outbox dispatcher, BullMQ/Redis integration, SSE endpoint, or worker consumers. Workers may initially run in the same deployable application, but outside request handling and through the same module interfaces. Redis/BullMQ is not the source of truth: committed outbox and domain state in PostgreSQL allow queue work to be redispatched after Redis loss. Workers publish status notifications only after committing state; SSE subscribers use PostgreSQL snapshots on connect/reconnect and Redis notifications for live updates.
 
 ## 3. Runtime layers
 
@@ -84,7 +113,7 @@ TA decisions are stored as final `pass` or `violation`; violation requires exact
 | Runtime/language | Bun and TypeScript | Required project stack. |
 | HTTP | Elysia 2.0 RC | Required project stack; follow documented feature-based patterns where applicable. |
 | Database | PostgreSQL | Selected for the final product. |
-| Durable work | PostgreSQL transactional outbox dispatches idempotent jobs to BullMQ on Redis; worker consumers execute judging/review | Selected for final product; not implemented in PA2. Configure Redis persistence, bounded concurrency, and recovery from PostgreSQL state. |
+| Durable work | PostgreSQL transactional outbox dispatches idempotent jobs to BullMQ on Redis; worker consumers execute judging/review | Final-system target; tables are declared, dispatcher/queue/consumers are not implemented. Configure Redis persistence, bounded concurrency, and recovery from PostgreSQL state. |
 | C++ execution | Docker-based isolated runner | Selected approach; exact runner setup remains gated on proof of all required restrictions. |
 | Live updates | SSE status stream plus GET snapshot | Selected; event replay is not required. Reconnect by fetching the current snapshot and reopening the stream. |
 | Model | Structured-output provider behind adapter | Provider/model remain open; set provider-side and application spend ceiling. |

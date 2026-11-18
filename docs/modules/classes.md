@@ -4,11 +4,26 @@
 
 Own classes, TA assignments, student memberships, and invite-code lifecycle. Enforce which users belong to or staff each class. Course policy permits one TA to serve multiple classes, multiple TAs per class, and a student to join multiple classes (FAQ-01).
 
+## Current implementation status
+
+`src/modules/class/` implements the basic class setup flow: admin class
+creation, paged class listing/detail, TA assignment, staff enrollment, and
+student join by invitation code. Class creation returns the generated
+six-digit code to the admin; one code is stored on the class row, with no
+expiry or separate invitation table. Listings filter archived classes and
+inactive TA/student links. Class detail checks admin access or current TA
+assignment/student membership. TA assignment and enrollment validate target
+role/status, are idempotent, and enrollment by TA checks class assignment.
+
+Code rotation, assignment removal, membership removal, and class audit routes
+remain unimplemented. See the current contract for the implemented route
+shapes and the proposed API inventory for broader final-product behavior.
+
 ## Responsibilities
 
 - Create classes and assign eligible TA accounts (admin action).
 - Enroll an eligible student by supported staff action or invite code.
-- Generate/rotate class invite codes; return plaintext only on creation and never log it.
+- Generate/rotate the current class invite code stored on the `classes` row; reveal it only to authorized staff and never log it.
 - Provide ownership/membership query capabilities to Labs and Submissions.
 - Record class/assignment/membership changes in audit history.
 
@@ -26,7 +41,7 @@ Expose focused capabilities such as `isAssignedTa({ userId, classId })`, `isStud
 
 ## Data and rules
 
-Own `classes`, `class_tas`, `class_students`, and `invite_codes` (see [`db_design.md`](../database/db_design.md)). Membership joins are unique. Invite codes are high-entropy secrets stored as keyed hashes, expire after 30 days, and are returned only at creation. Only one invite is active per class; rotating it revokes the prior code immediately.
+Own `classes`, `class_tas`, and `class_students` (see [`db_design.md`](../database/db_design.md)). Membership joins are unique. The current schema stores one invitation code on each class row; rotation can replace that value, so a separate `invite_codes` table is not needed for the current policy. The proposed invite-code API contract adds a 30-day expiry, but the PA2/PA3 rubrics and FAQ do not require one. If that proposed behavior remains in scope, add an expiry field to `classes`; otherwise remove it from the approved contract. Enforce uniqueness, protect code generation/storage/disclosure, and rate-limit join attempts in the class service.
 
 ## Acceptance criteria
 

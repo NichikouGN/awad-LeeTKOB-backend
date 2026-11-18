@@ -4,6 +4,23 @@
 
 Authenticate credentials through a replaceable adapter and provide a verified principal (user ID, role, active status) to controllers and services. The module does not infer identity from headers and does not implement class ownership rules.
 
+## Current implementation status
+
+The current implementation uses email/password signup and login, Bun's bcrypt
+password hashing, and signed access/refresh JWTs (`src/modules/auth/` and
+`src/plugins/jwt.plugin.ts`). Signup is public and new users receive the
+default `STU` role. Access tokens expire after 15 minutes and refresh tokens
+after 7 days. Protected routes verify the token signature and validate its
+`userId`, token type, and role claim. The app wires the user provider into JWT
+verification, which also checks that the account remains active and its
+current role matches the token. Disabling an account or changing its role
+invalidates its existing tokens on the next protected request. JWT secrets
+are required when `src/app.ts` constructs the plugins. This is the current
+credential choice, not an external identity-provider integration.
+
+The final-system requirements below remain the target. API errors use RFC 9457
+problem details; unexpected errors return a safe generic detail.
+
 ## Owned data and rules
 
 Own the user identity projection and account status/role linkage; credential verification may be delegated to an external identity provider. Do not store plaintext passwords or tokens. Role changes and account-state changes must be auditable. A role is server-derived, never accepted from request bodies for authorization.

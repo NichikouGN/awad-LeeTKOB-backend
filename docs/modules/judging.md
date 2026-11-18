@@ -4,11 +4,12 @@
 
 Own durable judge-job lifecycle, worker claims, sandbox adapter invocation, verdict normalization, and per-test results. It does not accept HTTP submissions or run C++ in an Elysia handler.
 
-The current PA2 implementation does not include this queue/worker workflow. The
-final product uses BullMQ backed by Redis with PostgreSQL outbox dispatch. The
-queue and worker consumer are not implemented in PA2; preserve the queue
-adapter boundary and make PostgreSQL job state sufficient to reconstruct work
-after Redis loss.
+The current app does not include this queue/worker workflow. The Drizzle
+schema declares `judge_jobs`, `test_results`, and `outbox_events`; no dispatcher,
+BullMQ/Redis integration, or worker consumer is currently wired. The final
+system uses BullMQ backed by Redis with PostgreSQL outbox dispatch. Preserve
+the queue adapter boundary and make PostgreSQL job state sufficient to
+reconstruct work after Redis loss.
 
 ## Responsibilities
 

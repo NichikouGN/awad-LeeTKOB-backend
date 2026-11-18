@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { AppError } from "../../libs/errors/app-error";
-import { ValidationError, ParseError } from "elysia";
+import { mapApiError } from "../../libs/errors/problem-details";
 import * as UserModel from "./user.model";
 import { adminCheck } from "../../plugins/adminCheck.plugin";
 import { rbac } from "../../plugins/role.plugin";
@@ -13,76 +13,61 @@ interface UserModuleDeps {
 }
 
 export const createUserModule = ({ userService, jwtAuth }: UserModuleDeps) =>
-  new Elysia({ prefix: "/users" })
+  new Elysia()
     .use(jwtAuth)
     .use(rbac)
     .use(adminCheck)
     .decorate("userService", userService)
-    .onError(({ error, set }) => {
-      if (error instanceof AppError) {
-        set.status = error.status;
-        return {
-          success: false,
-          message: error.message,
-        };
-      }
+    .onError(({ error, set }) => mapApiError(error, set))
+    .get(
+      "/profile",
+      { jwtAuth: "access", rbac: ["ADMIN", "TA", "STU"] },
 
-      if (error instanceof ValidationError) {
-        set.status = 422;
-        return {
-          success: false,
-          message: error.errors,
-        };
-      }
+      async ({ jwtPayload, set }) => {
+        const result = await userService.getUserProfile(jwtPayload.userId);
 
-      if (error instanceof ParseError) {
-        set.status = 400;
-        return {
-          success: false,
-          message: error,
-        };
-      }
+        set.status = 200;
 
-      // Remember to remove these error in message
-      set.status = 500;
-      return {
-        success: false,
-        message: error,
-      };
-    })
-    .group("/", { jwtAuth: "access" }, (app) =>
+        return {
+          success: true,
+          message: "User Found",
+          user: result,
+        };
+      },
+    )
+    .group("/users", { jwtAuth: "access" }, (app) =>
       app
-
-        // ===================================
-        // ||        TA, STU Route          ||
-        // ===================================
         .get(
-          "/:userId",
+          "/",
           {
-            rbac: ["TA", "STU"],
-            params: UserModel.UserParamsSchema.Params,
+            rbac: ["ADMIN"],
+            query: UserModel.GetUserListSchema.Query,
           },
-
-          async ({ params, set }) => {
-            const result = await userService.getUserProfile(params.userId);
-
+          async ({ query, set }) => {
+            const result = await userService.getUsers(query.page, query.limit);
             set.status = 200;
-
             return {
               success: true,
-              message: "User Found",
-              user: result,
+              users: result,
+              page: query.page,
+              limit: query.limit,
             };
           },
         )
+        // ===================================
+        // ||        TA, STU Route          ||
+        // ===================================
         .patch(
           "/:userId/edit",
           {
-            rbac: ["TA", "STU"],
+            rbac: ["ADMIN", "TA", "STU"],
             params: UserModel.UserParamsSchema.Params,
             body: UserModel.EditUserSchema.Body,
           },
-          async ({ params, body, set }) => {
+          async ({ jwtPayload, params, body, set }) => {
+            if (jwtPayload.userId !== params.userId) {
+              throw new AppError(403, "You may only edit your own profile");
+            }
             const result = await userService.patchUserProfile(
               params.userId,
               body.displayName,
@@ -143,11 +128,11 @@ export const createUserModule = ({ userService, jwtAuth }: UserModuleDeps) =>
             body: UserModel.UpdateUserStatusSchema.Body,
             adminCheck: true,
           },
-          ({ params, body, set }) => {
+          async ({ params, body, set }) => {
             const userId = params.userId;
             const status = body.status;
 
-            const result = userService.updateUserStatus(userId, status);
+            const result = await userService.updateUserStatus(userId, status);
             set.status = 200;
             return {
               success: true,

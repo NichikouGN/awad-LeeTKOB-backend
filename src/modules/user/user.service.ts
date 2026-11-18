@@ -78,6 +78,11 @@ export class UserService implements UserProvider {
     return result;
   }
 
+  async getUsers(page: number, limit: number): Promise<UserRes[]> {
+    const offset = (page - 1) * limit;
+    return this.userRepository.getUsersRecord({ offset, limit });
+  }
+
   async patchUserProfile(
     userId: string,
     displayName: string,

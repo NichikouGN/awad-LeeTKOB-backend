@@ -18,3 +18,8 @@ export interface UserRes {
 export interface UserLogin extends UserRes {
   passwordHash: string;
 }
+
+export interface UserListReq {
+  offset: number;
+  limit: number;
+}

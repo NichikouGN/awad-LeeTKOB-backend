@@ -27,3 +27,12 @@ export const UpdateUserStatusSchema = {
 export type UpdateUserStatusSchema = UnwrapModels<
   typeof UpdateUserStatusSchema
 >;
+
+export const GetUserListSchema = {
+  Query: t.Object({
+    page: t.Number({ minimum: 1, default: 1 }),
+    limit: t.Number({ minimum: 1, maximum: 100, default: 20 }),
+  }),
+};
+
+export type GetUserListSchema = UnwrapModels<typeof GetUserListSchema>;

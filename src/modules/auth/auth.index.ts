@@ -1,6 +1,6 @@
-import { Elysia, ParseError, ValidationError } from "elysia";
+import { Elysia } from "elysia";
 import * as AuthModel from "./auth.model";
-import { AppError } from "../../libs/errors/app-error";
+import { mapApiError } from "../../libs/errors/problem-details";
 import { TokenService } from "./token.service";
 import { AuthService } from "./auth.service";
 import type { UserProvider } from "../user/interface/user-provider";
@@ -30,37 +30,7 @@ export const createAuthModule = ({
         auth: new AuthService(tokens, userProvider),
       };
     })
-    .onError(({ error, set }) => {
-      if (error instanceof AppError) {
-        set.status = error.status;
-        return {
-          success: false,
-          message: error.message,
-        };
-      }
-
-      if (error instanceof ValidationError) {
-        set.status = 422;
-        return {
-          success: false,
-          message: error.errors,
-        };
-      }
-
-      if (error instanceof ParseError) {
-        set.status = 400;
-        return {
-          success: false,
-          message: error,
-        };
-      }
-
-      set.status = 500;
-      return {
-        success: false,
-        message: error,
-      };
-    })
+    .onError(({ error, set }) => mapApiError(error, set))
     .post(
       "/login",
       { body: AuthModel.LoginSchema.Body },
@@ -72,7 +42,13 @@ export const createAuthModule = ({
           success: true,
           message: "LoginSchema successfully",
           tokens: result.tokens,
-          user: result.user,
+          user: {
+            userId: result.user.userId,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            role: result.user.role,
+            status: result.user.status,
+          },
         };
       },
     )

@@ -1,8 +1,9 @@
 import { users } from "../../db/schema/users.schema";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import type { Database } from "../../db/db";
 import type {
   UserLogin,
+  UserListReq,
   UserRes,
   UserRole,
   UserSignupReq,
@@ -140,6 +141,22 @@ export class UserRepository {
       status: result.userStatus,
     };
   }
+
+  async getUsersRecord({ offset, limit }: UserListReq): Promise<UserRes[]> {
+    return this.db
+      .select({
+        userId: users.userId,
+        email: users.email,
+        displayName: users.displayName,
+        role: users.role,
+        status: users.userStatus,
+      })
+      .from(users)
+      .orderBy(asc(users.userId))
+      .offset(offset)
+      .limit(limit);
+  }
+
   async patchUserProfileRecord(
     userId: string,
     displayName: string,

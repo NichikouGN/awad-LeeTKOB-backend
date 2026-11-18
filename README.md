@@ -1,13 +1,18 @@
 # LeeTKOB backend
 
-Backend starter for LeeTKOB, built with Bun, TypeScript, and Elysia 2.0 RC. The
-PA2 implementation focuses on the lab-publish endpoint contract; authentication
-and persistence are replaceable seams and are not production integrations yet.
-The final-product architecture is a modular monolith using PostgreSQL,
-BullMQ/Redis, a PostgreSQL transactional outbox, Docker-based judging, and SSE
-for live submission updates. The durable queue, outbox dispatcher,
-judge/review workers, and sandbox integration are not implemented in the
-current PA2 project.
+LeeTKOB backend built with Bun, TypeScript, Elysia 2.0 RC, Drizzle, and
+PostgreSQL. The current application mounts authentication, user, and class
+routes. Its persistence and auth code are real implementations, not just
+replaceable stubs: users authenticate with email/password and JWTs, and the
+database stores bcrypt password hashes. See [current implementation status](docs/architecture/system_design.md#current-implementation-status).
+
+The PA2 publish endpoint exists as a contract, but its handler is not mounted
+in `src/app.ts`. Lab authoring, submissions, judging, model review, publication,
+and appeals are not end-to-end features in the current application. The
+database declares tables for much of that target workflow; declarations do not
+mean the routes, workers, migrations, or integrations exist. The final-product
+design uses a durable queue, transactional outbox, isolated judging, and model
+review as planned architecture.
 
 ## Requirements
 
@@ -43,12 +48,12 @@ protection for a red check to block a merge.
 
 ## Endpoint contract
 
-The PA2 milestone contract is [`docs/contract/post-lab-publish.md`](docs/contract/post-lab-publish.md), at `POST /api/v1/labs/{labId}/publish`. The final-product contract is [`docs/contract/post-lab-publish-v2.md`](docs/contract/post-lab-publish-v2.md), at `POST /api/v2/labs/{labId}/publish`; it blocks publication until the entire judging and review pipeline completes. The PA2 handler still fails closed until a real authenticator and persistent lab repository are wired in.
+The PA2 milestone contract is [`docs/contract/post-lab-publish.md`](docs/contract/post-lab-publish.md), at `POST /api/v1/labs/{labId}/publish`. The final-product contract is [`docs/contract/post-lab-publish-v2.md`](docs/contract/post-lab-publish-v2.md), at `POST /api/v2/labs/{labId}/publish`. Both are contract documents; neither route is currently mounted. Current route behavior is described in the implementation status and route modules.
 
 ## Secrets and model spending
 
-No model API key is used and no model calls are made in PA2. The planned hard
-budget is **USD 1.00 per lab**. Before model calls are enabled, configure a
+No model API key is used by the current application and no model calls are
+implemented. The planned hard budget is **USD 1.00 per lab**. Before model calls are enabled, configure a
 provider-side spend limit of USD 1.00 per lab (or lower) and enforce the same cap
 in the application. The model provider and model are not selected yet. Never
 pass model credentials into the C++ sandbox.
@@ -58,10 +63,10 @@ See [`PERMISSIONS.md`](PERMISSIONS.md) for assistant permissions and
 
 ## Product-owner FAQ
 
-The [`FAQ.md`](FAQ.md) records product-owner answers for behavior the brief
-leaves open. Ask questions under the class group's pinned LeeTKOB post and cite
-the relevant FAQ item in code or documentation when relying on it. The class
-brief takes precedence if it conflicts with the FAQ.
+[`FAQ.md`](FAQ.md) is the developer's working reference to product-owner
+decisions for implementing LeeTKOB. It is not end-user support content. Use it
+to resolve product behavior the class brief leaves open; the brief takes
+precedence if they conflict.
 
 ## Project rules
 

@@ -19,11 +19,12 @@ The approved [`POST /api/v1/labs/{labId}/publish`](contract/post-lab-publish.md)
 | [Module boundaries](architecture/module_boundaries.md) | Module ownership, dependency rules, and internal service interfaces. |
 | [Security and protection](architecture/security_and_protection.md) | Authentication, privacy, sandbox, model, and API protections. |
 | [Operations](architecture/operations.md) | Queues, observability, recovery, capacity evidence, and deployment requirements. |
-| [Database design](database/db_design.md) | Proposed relational data model, ownership, constraints, indexes, and transaction boundaries. |
+| [Database design](database/db_design.md) | Review of the current Drizzle schema against final-system workflows, including gaps to resolve before adopting it as final. |
 | [Module specifications](modules/) | Scope, interfaces, API links, dependencies, and acceptance criteria by module. |
 | [API contract inventory](planning/api-contracts.md) | Proposed public API surface and contract decisions still to resolve. |
 | [Publish contract](contract/post-lab-publish.md) | Approved client contract for lab publication. |
 | [Final publish contract](contract/post-lab-publish-v2.md) | Final-product publish gate requiring successful judging and completed review before publication. |
+| [Basic auth, user, and class contract](contract/class-and-user-management.md) | Account lifecycle and the minimum class setup/membership routes implemented for PA3 preparation. |
 | [Project proposal](planning/project-proposal.md) | Product summary, original FR/NFR identifiers, architecture choice, and open decisions. |
 
 ## Change discipline
@@ -31,3 +32,13 @@ The approved [`POST /api/v1/labs/{labId}/publish`](contract/post-lab-publish.md)
 For a public endpoint, update and review its endpoint contract in a separate commit before changing implementation behavior. Keep acceptance criteria tied to requirement IDs. If a brief or FAQ rule changes, update affected requirements, module specifications, database notes, and contracts together, while retaining the required contract-first commit order.
 
 PostgreSQL, BullMQ/Redis, the transactional outbox, Docker-based judging, and SSE are selected for the final product design. Some integration choices remain open, including the identity provider, exact Docker runner profile, and model provider. The API inventory remains proposed until each endpoint has an approved contract.
+
+## Milestone and implementation status
+
+The PA2 and PA3 rubric PDFs at the repository root are milestone evaluation
+criteria, not evidence that a feature is implemented. The current app composes
+auth, user, and class routes; see [system design](architecture/system_design.md)
+for concrete route and behavior gaps. The final-system documents remain the
+target architecture, with current implementation choices and deviations called
+out where relevant. [`FAQ.md`](../FAQ.md) is the developer's product-decision
+reference, not student-facing support content.

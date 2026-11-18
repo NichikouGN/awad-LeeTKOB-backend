@@ -18,6 +18,7 @@ export const classes = pgTable(
     archivedAt: instant("archived_at"),
   },
   (t) => [
+    uniqueIndex("classes_invitation_code_unique").on(t.invitationCode),
     index("classes_created_by_created_at_idx").on(
       t.createdByUserId,
       t.createdAt,

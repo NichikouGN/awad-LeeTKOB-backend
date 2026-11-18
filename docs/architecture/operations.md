@@ -2,7 +2,7 @@
 
 ## 1. Process model
 
-The target application is a modular monolith exposing HTTP/SSE and bounded workers. PostgreSQL stores domain state and the transactional outbox; an outbox dispatcher publishes jobs to BullMQ on Redis. API intake, C++ execution, and model calls are separate workload stages. The current PA2 project does not yet include the outbox dispatcher, BullMQ/Redis integration, SSE endpoint, or worker consumers. Workers may initially run alongside the API, but request handlers must not compile code or wait for judging/model review.
+The final-system target is a modular monolith exposing HTTP/SSE and bounded workers. PostgreSQL stores domain state and the transactional outbox; an outbox dispatcher publishes jobs to BullMQ on Redis. API intake, C++ execution, and model calls are separate workload stages. The current app has auth, user, and class routes only; although queue-related tables are declared, it has no outbox dispatcher, BullMQ/Redis integration, SSE endpoint, or worker consumers. Workers may initially run alongside the API, but request handlers must not compile code or wait for judging/model review.
 
 ## 2. Submission and review jobs
 

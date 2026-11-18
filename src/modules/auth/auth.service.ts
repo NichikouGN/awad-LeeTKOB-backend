@@ -5,6 +5,17 @@ import type { UserProvider } from "../user/interface/user-provider";
 import type { TokenService } from "./token.service";
 import type { UserRes, UserRole } from "../user/user.type";
 
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "23505"
+  );
+}
+
 export class AuthService {
   constructor(
     private readonly tokens: TokenService,
@@ -15,9 +26,9 @@ export class AuthService {
     tokens: { accessToken: string; refreshToken: string };
     user: UserRes;
   }> {
-    const user = await this.userProvider.getUserLogin(email);
+    const user = await this.userProvider.getUserLogin(normalizeEmail(email));
 
-    if (!user) throw new AppError(404, "User Not Found");
+    if (!user) throw new AppError(401, "User Not Found");
     if (user.status === "DISABLED")
       throw new AppError(403, "User Has Been Disabled");
 
@@ -37,11 +48,23 @@ export class AuthService {
     password,
     displayName,
   }: AuthModel.SignUpSchema["Body"]) {
-    const user = await this.userProvider.getUserLogin(email);
+    const normalizedEmail = normalizeEmail(email);
+    const user = await this.userProvider.getUserLogin(normalizedEmail);
     if (user) throw new AppError(409, "This email is already used");
 
     const passwordHash = await hashPassword(password);
-    await this.userProvider.signUpUser({ email, passwordHash, displayName });
+    try {
+      await this.userProvider.signUpUser({
+        email: normalizedEmail,
+        passwordHash,
+        displayName,
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new AppError(409, "This email is already used");
+      }
+      throw error;
+    }
   }
 
   async issueNewAccessToken({

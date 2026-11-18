@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { db } from "./db/db";
-import "dotenv.config";
+import "dotenv/config";
 import { openapi } from "@elysia/openapi";
 import { createAuthModule } from "./modules/auth/auth.index";
 import { createUserModule } from "./modules/user/user.index";
@@ -22,19 +22,21 @@ const loadEnv = (name: string) => {
   return env;
 };
 
-const jwtPlugins = createJwtPlugins({
-  accessSecret: loadEnv("JWT_ACCESS_TOKEN"),
-  refreshSecret: loadEnv("JWT_REFRESH_TOKEN"),
-});
-
 export const createApp = (deps: AppDependencies = {}) => {
   const database = deps.db ?? db;
 
   const userRepository = new UserRepository(database);
   const userService = deps.userService ?? new UserService(userRepository);
 
+  const jwtPlugins = createJwtPlugins({
+    accessSecret: loadEnv("JWT_ACCESS_TOKEN"),
+    refreshSecret: loadEnv("JWT_REFRESH_TOKEN"),
+    userProvider: userService,
+  });
+
   const classRepository = new ClassRepository(database);
-  const classService = deps.classService ?? new ClassService(classRepository);
+  const classService =
+    deps.classService ?? new ClassService(classRepository, userService);
 
   return new Elysia()
     .use(openapi())
