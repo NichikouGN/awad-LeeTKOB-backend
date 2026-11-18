@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { expect, it, mock } from "bun:test";
 import { AuthService } from "../src/modules/auth/auth.service";
 import type { UserProvider } from "../src/modules/user/interface/user-provider";
 import type { TokenService } from "../src/modules/auth/token.service";
@@ -33,9 +33,13 @@ const makeAuthService = (
   } = {},
 ) => {
   const provider = {
-    getUserLogin: mock(async () =>
-      "foundUser" in overrides ? overrides.foundUser! : user,
-    ),
+    getUserLogin: mock(async () => {
+      if ("foundUser" in overrides) {
+        if (!overrides.foundUser) {
+          return null;
+        } else return overrides.foundUser;
+      } else return user;
+    }),
     signUpUser: mock(async () => null),
     getUserRole: mock(async () => null),
     getUserStatus: mock(async () => null),

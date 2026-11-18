@@ -1,13 +1,13 @@
-import { UserRepository } from "./user.repository";
-import { UserProvider } from "./interface/user-provider";
-import {
+import { AppError } from "../../libs/errors/app-error";
+import type { UserRepository } from "./user.repository";
+import type { UserProvider } from "./interface/user-provider";
+import type {
   UserRes,
   UserRole,
   UserSignupReq,
   UserStatus,
   UserLogin,
 } from "./user.type";
-import { AppError } from "../../libs/errors/app-error";
 
 export class UserService implements UserProvider {
   constructor(private readonly userRepository: UserRepository) {}
@@ -30,15 +30,9 @@ export class UserService implements UserProvider {
   }
 
   async getUserLogin(email: string): Promise<UserLogin | null> {
-    try {
-      const user = await this.userRepository.getUserForLogin(email);
-
-      if (!user) return null;
-
-      return user;
-    } catch (error) {
-      throw new Error(error as any);
-    }
+    const user = await this.userRepository.getUserForLogin(email);
+    if (!user) return null;
+    return user;
   }
 
   async signUpUser({

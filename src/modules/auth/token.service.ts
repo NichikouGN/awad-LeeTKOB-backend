@@ -1,5 +1,4 @@
-import { UserRole } from "../user/user.type";
-import type { JWTPayloadSpec } from "@elysia/jwt";
+import type { UserRole } from "../user/user.type";
 
 export type JwtPayload = {
   userId: string;

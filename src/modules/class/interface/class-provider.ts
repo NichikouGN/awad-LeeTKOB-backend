@@ -1,4 +1,4 @@
-import { CreateClassReq, CreateClassRes } from "../class.type";
+import type { CreateClassReq, CreateClassRes } from "../class.type";
 
 export interface ClassProvider {
   createClass({ className, adminId }: CreateClassReq): Promise<CreateClassRes>;

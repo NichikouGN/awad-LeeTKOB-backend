@@ -1,6 +1,6 @@
-import type { Database } from "../../db/db";
 import { classes } from "../../db/schema/classes.schema";
-import { CreateClassRes, CreateClassRecord } from "./class.type";
+import type { Database } from "../../db/db";
+import type { CreateClassRes, CreateClassRecord } from "./class.type";
 
 export class ClassRepository {
   constructor(private readonly db: Database) {}

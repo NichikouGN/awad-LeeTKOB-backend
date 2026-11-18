@@ -1,15 +1,20 @@
 import { describe, expect, it, mock } from "bun:test";
 import { Elysia } from "elysia";
-import { accessJwt } from "../src/plugins/jwt.plugin";
 import { createUserModule } from "../src/modules/user/user.index";
 import type { UserService } from "../src/modules/user/user.service";
+import { createJwtPlugins } from "../src/plugins/jwt.plugin";
 
 const targetUserId = "target-user-123";
 const adminId = "admin-user-123";
 
+const jwtPlugins = createJwtPlugins({
+  accessSecret: "JWT_ACCESS_TOKEN",
+  refreshSecret: "JWT_REFRESH_TOKEN",
+});
+
 //Temp route to issue a token
 const tokenIssuer = new Elysia()
-  .use(accessJwt)
+  .use(jwtPlugins.accessJwt)
   .get("/token", async ({ access, query }) =>
     access.sign({
       userId: query.userId,
@@ -49,7 +54,10 @@ const service = {
 
 //Create app with a single user route, inject with the mock user service
 const app = new Elysia().use(
-  createUserModule(service as unknown as UserService),
+  createUserModule({
+    userService: service as unknown as UserService,
+    jwtAuth: jwtPlugins.jwtAuth,
+  }),
 );
 
 //Helper functions

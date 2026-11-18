@@ -1,9 +1,9 @@
-import { TokenService } from "./token.service";
-import type * as AuthModel from "./auth.model";
 import { AppError } from "../../libs/errors/app-error";
 import { hashPassword, verifyPassword } from "./auth.utils";
-import { UserProvider } from "../user/interface/user-provider";
-import { UserRes, UserRole } from "../user/user.type";
+import type * as AuthModel from "./auth.model";
+import type { UserProvider } from "../user/interface/user-provider";
+import type { TokenService } from "./token.service";
+import type { UserRes, UserRole } from "../user/user.type";
 
 export class AuthService {
   constructor(

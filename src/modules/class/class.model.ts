@@ -1,4 +1,4 @@
-import { t, UnwrapModels } from "elysia";
+import { t, type UnwrapModels } from "elysia";
 
 export const CreateClass = {
   Body: t.Object({

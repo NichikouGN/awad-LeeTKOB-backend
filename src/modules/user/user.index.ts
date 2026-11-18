@@ -1,13 +1,18 @@
 import { Elysia } from "elysia";
-import { UserService } from "./user.service";
-import { jwtAuth } from "../../plugins/jwt.plugin";
-import { rbac } from "../../plugins/role.plugin";
 import { AppError } from "../../libs/errors/app-error";
 import { ValidationError, ParseError } from "elysia";
 import * as UserModel from "./user.model";
 import { adminCheck } from "../../plugins/adminCheck.plugin";
+import { rbac } from "../../plugins/role.plugin";
+import type { JwtPlugins } from "../../plugins/jwt.plugin";
+import type { UserService } from "./user.service";
 
-export const createUserModule = (userService: UserService) =>
+interface UserModuleDeps {
+  userService: UserService;
+  jwtAuth: JwtPlugins["jwtAuth"];
+}
+
+export const createUserModule = ({ userService, jwtAuth }: UserModuleDeps) =>
   new Elysia({ prefix: "/users" })
     .use(jwtAuth)
     .use(rbac)

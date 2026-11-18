@@ -1,8 +1,7 @@
 import { randomInt } from "node:crypto";
-
-import { ClassRepository } from "./class.repository";
-import { ClassProvider } from "./interface/class-provider";
-import { CreateClassReq, CreateClassRes } from "./class.type";
+import type { ClassRepository } from "./class.repository";
+import type { ClassProvider } from "./interface/class-provider";
+import type { CreateClassReq, CreateClassRes } from "./class.type";
 
 export class ClassService implements ClassProvider {
   constructor(private readonly classRepository: ClassRepository) {}

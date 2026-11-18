@@ -34,7 +34,7 @@ export async function seedLabs() {
       .returning();
   }
 
-  let [constraint] = await db
+  const [constraint] = await db
     .select()
     .from(labConstraints)
     .where(

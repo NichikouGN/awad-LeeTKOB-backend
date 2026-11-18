@@ -1,8 +1,13 @@
-import type { Database } from "../../db/db";
 import { users } from "../../db/schema/users.schema";
 import { eq } from "drizzle-orm";
-import { UserLogin } from "./user.type";
-import { UserRes, UserRole, UserSignupReq, UserStatus } from "./user.type";
+import type { Database } from "../../db/db";
+import type {
+  UserLogin,
+  UserRes,
+  UserRole,
+  UserSignupReq,
+  UserStatus,
+} from "./user.type";
 
 export class UserRepository {
   constructor(private readonly db: Database) {}

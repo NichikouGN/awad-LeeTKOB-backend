@@ -1,19 +1,31 @@
 import { Elysia } from "elysia";
+import { db } from "./db/db";
+import "dotenv.config";
 import { openapi } from "@elysia/openapi";
 import { createAuthModule } from "./modules/auth/auth.index";
 import { createUserModule } from "./modules/user/user.index";
 import { createClassModule } from "./modules/class/class.index";
-import { UserService } from "./modules/user/user.service";
-import { UserRepository } from "./modules/user/user.repository";
-import { ClassService } from "./modules/class/class.service";
+import { createJwtPlugins } from "./plugins/jwt.plugin";
 import { ClassRepository } from "./modules/class/class.repository";
-import { db } from "./db/db";
+import { UserRepository } from "./modules/user/user.repository";
+import { UserService } from "./modules/user/user.service";
+import { ClassService } from "./modules/class/class.service";
 
 interface AppDependencies {
   db?: typeof db;
   userService?: UserService;
   classService?: ClassService;
 }
+const loadEnv = (name: string) => {
+  const env = process.env[name];
+  if (!env) throw new Error(`Missing env ${name}`);
+  return env;
+};
+
+const jwtPlugins = createJwtPlugins({
+  accessSecret: loadEnv("JWT_ACCESS_TOKEN"),
+  refreshSecret: loadEnv("JWT_REFRESH_TOKEN"),
+});
 
 export const createApp = (deps: AppDependencies = {}) => {
   const database = deps.db ?? db;
@@ -26,9 +38,26 @@ export const createApp = (deps: AppDependencies = {}) => {
 
   return new Elysia()
     .use(openapi())
-    .use(createUserModule(userService))
-    .use(createAuthModule(userService))
-    .use(createClassModule(classService));
+    .use(
+      createAuthModule({
+        userProvider: userService,
+        accessJwt: jwtPlugins.accessJwt,
+        refreshJwt: jwtPlugins.refreshJwt,
+        jwtAuth: jwtPlugins.jwtAuth,
+      }),
+    )
+    .use(
+      createUserModule({
+        userService: userService,
+        jwtAuth: jwtPlugins.jwtAuth,
+      }),
+    )
+    .use(
+      createClassModule({
+        classService: classService,
+        jwtAuth: jwtPlugins.jwtAuth,
+      }),
+    );
 };
 
 export const app = createApp();

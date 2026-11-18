@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { AppError } from "../libs/errors/app-error";
-import { JwtPayload } from "../modules/auth/token.service";
+import type { JwtPayload } from "../modules/auth/token.service";
 import type * as AuthModel from "../modules/user/user.model";
 
 export const adminCheck = new Elysia({ name: "plugin.adminCheck" }).macro({

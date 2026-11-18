@@ -1,5 +1,5 @@
 import { pgTable, varchar, pgEnum } from "drizzle-orm/pg-core";
-import { timestamp, uuid } from "drizzle-orm/cockroach-core";
+import { timestamp } from "drizzle-orm/cockroach-core";
 import { identity } from "./_helpers";
 
 export const userRoleEnum = pgEnum("user_role", ["ADMIN", "TA", "STU"]);

@@ -1,4 +1,4 @@
-import { UserLogin, UserRes, UserSignupReq } from "../user.type";
+import type { UserLogin, UserRes, UserSignupReq } from "../user.type";
 
 export interface UserProvider {
   getUserRole(userId: string): Promise<string | null>;

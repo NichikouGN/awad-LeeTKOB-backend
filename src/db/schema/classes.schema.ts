@@ -1,13 +1,6 @@
 import { sql } from "drizzle-orm";
-import {
-  check,
-  index,
-  pgTable,
-  unique,
-  uniqueIndex,
-  varchar,
-} from "drizzle-orm/pg-core";
-import { identity, instant, bytes } from "./_helpers";
+import { index, pgTable, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { identity, instant } from "./_helpers";
 import { users } from "./users.schema";
 import { uuid } from "drizzle-orm/cockroach-core";
 

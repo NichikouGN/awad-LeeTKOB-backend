@@ -1,11 +1,18 @@
 import { Elysia, ParseError, ValidationError } from "elysia";
-import { ClassService } from "./class.service";
-import { jwtAuth } from "../../plugins/jwt.plugin";
 import { rbac } from "../../plugins/role.plugin";
 import { AppError } from "../../libs/errors/app-error";
 import * as ClassModel from "./class.model";
+import type { ClassService } from "./class.service";
+import type { JwtPlugins } from "../../plugins/jwt.plugin";
 
-export const createClassModule = (classService: ClassService) => {
+interface ClassModuleDeps {
+  classService: ClassService;
+  jwtAuth: JwtPlugins["jwtAuth"];
+}
+export const createClassModule = ({
+  classService,
+  jwtAuth,
+}: ClassModuleDeps) => {
   return new Elysia({ prefix: "/classes" })
     .use(jwtAuth)
     .use(rbac)

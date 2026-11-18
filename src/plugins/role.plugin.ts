@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { AppError } from "../libs/errors/app-error";
-import { JwtPayload } from "../modules/auth/token.service";
+import type { JwtPayload } from "../modules/auth/token.service";
 
 export const rbac = new Elysia({ name: "plugin.rbac" }).macro({
   rbac: (allowedRoles: JwtPayload["role"][]) => ({

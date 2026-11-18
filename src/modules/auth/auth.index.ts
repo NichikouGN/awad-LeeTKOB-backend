@@ -1,18 +1,28 @@
 import { Elysia, ParseError, ValidationError } from "elysia";
-import { TokenService } from "./token.service";
-import { AuthService } from "./auth.service";
-import { jwtAuth } from "../../plugins/jwt.plugin";
-import { accessJwt, refreshJwt } from "../../plugins/jwt.plugin";
 import * as AuthModel from "./auth.model";
 import { AppError } from "../../libs/errors/app-error";
+import { TokenService } from "./token.service";
+import { AuthService } from "./auth.service";
+import type { UserProvider } from "../user/interface/user-provider";
+import type { JwtPlugins } from "../../plugins/jwt.plugin";
 
-import { UserProvider } from "../user/interface/user-provider";
+interface AuthModuleDeps {
+  userProvider: UserProvider;
+  accessJwt: JwtPlugins["accessJwt"];
+  refreshJwt: JwtPlugins["refreshJwt"];
+  jwtAuth: JwtPlugins["jwtAuth"];
+}
 
-export const createAuthModule = (userProvider: UserProvider) => {
+export const createAuthModule = ({
+  userProvider,
+  accessJwt,
+  refreshJwt,
+  jwtAuth,
+}: AuthModuleDeps) => {
   return new Elysia({ prefix: "/auth" })
-    .use(jwtAuth)
     .use(accessJwt)
     .use(refreshJwt)
+    .use(jwtAuth)
     .decorate((deps) => {
       const tokens = new TokenService(deps.access, deps.refresh);
       return {
