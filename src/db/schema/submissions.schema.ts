@@ -40,9 +40,16 @@ export const submissions = pgTable(
     judgeCompletedAt: instant("judge_completed_at"),
   },
   (t) => [
-    unique("submissions_idempotency_unique").on(t.labId, t.studentUserId, t.idempotencyKey),
+    unique("submissions_idempotency_unique").on(
+      t.labId,
+      t.studentUserId,
+      t.idempotencyKey,
+    ),
     unique("submissions_lab_submission_unique").on(t.labId, t.submissionId),
-    check("submissions_source_bytes_check", sql`${t.sourceBytes} BETWEEN 1 AND 65536`),
+    check(
+      "submissions_source_bytes_check",
+      sql`${t.sourceBytes} BETWEEN 1 AND 65536`,
+    ),
     check(
       "submissions_judge_status_check",
       sql`${t.judgeStatus} IN ('queued', 'running', 'finished', 'failed')`,
@@ -51,10 +58,22 @@ export const submissions = pgTable(
       "submissions_overall_verdict_check",
       sql`${t.overallVerdict} IS NULL OR ${t.overallVerdict} IN ('AC', 'WA', 'TLE', 'MLE', 'RE', 'CE')`,
     ),
-    index("submissions_latest_idx").on(t.labId, t.studentUserId, t.receivedAt, t.submissionId),
-    index("submissions_lab_received_idx").on(t.labId, t.receivedAt, t.submissionId),
+    index("submissions_latest_idx").on(
+      t.labId,
+      t.studentUserId,
+      t.receivedAt,
+      t.submissionId,
+    ),
+    index("submissions_lab_received_idx").on(
+      t.labId,
+      t.receivedAt,
+      t.submissionId,
+    ),
     index("submissions_student_received_idx").on(t.studentUserId, t.receivedAt),
-    index("submissions_judge_status_received_idx").on(t.judgeStatus, t.receivedAt),
+    index("submissions_judge_status_received_idx").on(
+      t.judgeStatus,
+      t.receivedAt,
+    ),
   ],
 );
 
@@ -105,7 +124,10 @@ export const testResults = pgTable(
     createdAt: instant("created_at").notNull(),
   },
   (t) => [
-    unique("test_results_submission_test_unique").on(t.submissionId, t.testNumber),
+    unique("test_results_submission_test_unique").on(
+      t.submissionId,
+      t.testNumber,
+    ),
     check(
       "test_results_verdict_check",
       sql`${t.verdict} IN ('AC', 'WA', 'TLE', 'MLE', 'RE', 'CE')`,
@@ -138,12 +160,18 @@ export const reviewRuns = pgTable(
     createdAt: instant("created_at").notNull(),
   },
   (t) => [
-    unique("review_runs_submission_attempt_unique").on(t.submissionId, t.attemptNumber),
+    unique("review_runs_submission_attempt_unique").on(
+      t.submissionId,
+      t.attemptNumber,
+    ),
     check(
       "review_runs_status_check",
       sql`${t.status} IN ('queued', 'running', 'completed', 'partial', 'failed')`,
     ),
-    check("review_runs_method_check", sql`${t.methodSummary} IN ('hard_rule', 'model', 'mixed')`),
+    check(
+      "review_runs_method_check",
+      sql`${t.methodSummary} IN ('hard_rule', 'model', 'mixed')`,
+    ),
     check(
       "review_runs_usage_check",
       sql`(${t.inputTokens} IS NULL OR ${t.inputTokens} >= 0) AND (${t.outputTokens} IS NULL OR ${t.outputTokens} >= 0) AND (${t.costUsd} IS NULL OR ${t.costUsd} >= 0)`,
@@ -170,7 +198,9 @@ export const reviewItems = pgTable(
     constraintId: varchar("constraint_id", { length: 40 }).notNull(),
     constraintRevisionId: uuid("constraint_revision_id")
       .notNull()
-      .references(() => constraintRevisions.constraintRevisionId, { onDelete: "restrict" }),
+      .references(() => constraintRevisions.constraintRevisionId, {
+        onDelete: "restrict",
+      }),
     proposedVerdict: varchar("proposed_verdict", { length: 12 }).notNull(),
     proposalReason: text("proposal_reason"),
     evidence: jsonb("evidence").notNull().default([]),
@@ -201,10 +231,25 @@ export const reviewItems = pgTable(
       "review_items_verdict_check",
       sql`${t.proposedVerdict} IN ('pass', 'violation', 'unsure')`,
     ),
-    check("review_items_queue_status_check", sql`${t.queueStatus} IN ('pending', 'resolved')`),
-    check("review_items_evidence_array_check", sql`jsonb_typeof(${t.evidence}) = 'array'`),
-    index("review_items_queue_idx").on(t.labId, t.queueStatus, t.createdAt, t.reviewItemId),
-    index("review_items_history_idx").on(t.submissionId, t.constraintId, t.createdAt),
+    check(
+      "review_items_queue_status_check",
+      sql`${t.queueStatus} IN ('pending', 'resolved')`,
+    ),
+    check(
+      "review_items_evidence_array_check",
+      sql`jsonb_typeof(${t.evidence}) = 'array'`,
+    ),
+    index("review_items_queue_idx").on(
+      t.labId,
+      t.queueStatus,
+      t.createdAt,
+      t.reviewItemId,
+    ),
+    index("review_items_history_idx").on(
+      t.submissionId,
+      t.constraintId,
+      t.createdAt,
+    ),
     index("review_items_pending_idx")
       .on(t.labId, t.createdAt)
       .where(sql`${t.queueStatus} = 'pending'`),
@@ -229,12 +274,26 @@ export const reviewDecisions = pgTable(
     isCurrent: boolean("is_current").notNull(),
   },
   (t) => [
-    unique("review_decisions_sequence_unique").on(t.reviewItemId, t.sequenceNumber),
-    uniqueIndex("review_decisions_one_current_idx").on(t.reviewItemId).where(sql`${t.isCurrent}`),
+    unique("review_decisions_sequence_unique").on(
+      t.reviewItemId,
+      t.sequenceNumber,
+    ),
+    uniqueIndex("review_decisions_one_current_idx")
+      .on(t.reviewItemId)
+      .where(sql`${t.isCurrent}`),
     check("review_decisions_sequence_check", sql`${t.sequenceNumber} > 0`),
-    check("review_decisions_verdict_check", sql`${t.verdict} IN ('pass', 'violation')`),
-    check("review_decisions_evidence_array_check", sql`jsonb_typeof(${t.evidence}) = 'array'`),
-    index("review_decisions_actor_decided_idx").on(t.decidedByUserId, t.decidedAt),
+    check(
+      "review_decisions_verdict_check",
+      sql`${t.verdict} IN ('pass', 'violation')`,
+    ),
+    check(
+      "review_decisions_evidence_array_check",
+      sql`jsonb_typeof(${t.evidence}) = 'array'`,
+    ),
+    index("review_decisions_actor_decided_idx").on(
+      t.decidedByUserId,
+      t.decidedAt,
+    ),
     index("review_decisions_history_idx").on(t.reviewItemId, t.decidedAt),
   ],
 );

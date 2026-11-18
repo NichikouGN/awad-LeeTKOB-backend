@@ -34,10 +34,9 @@ export const grades = pgTable(
     score: numeric("score", { precision: 4, scale: 2 }).notNull(),
     gradeSource: varchar("grade_source", { length: 24 }).notNull(),
     updatedAt: instant("updated_at").notNull(),
-    updatedByUserId: uuid("updated_by_user_id").references(
-      () => users.userId,
-      { onDelete: "restrict" },
-    ),
+    updatedByUserId: uuid("updated_by_user_id").references(() => users.userId, {
+      onDelete: "restrict",
+    }),
   },
   (t) => [
     unique("grades_lab_student_unique").on(t.labId, t.studentUserId),
@@ -64,7 +63,9 @@ export const deductions = pgTable(
     constraintId: varchar("constraint_id", { length: 40 }).notNull(),
     constraintRevisionId: uuid("constraint_revision_id")
       .notNull()
-      .references(() => constraintRevisions.constraintRevisionId, { onDelete: "restrict" }),
+      .references(() => constraintRevisions.constraintRevisionId, {
+        onDelete: "restrict",
+      }),
     amount: numeric("amount", { precision: 4, scale: 2 }).notNull(),
     reason: text("reason").notNull(),
     evidence: jsonb("evidence").notNull(),
@@ -100,16 +101,21 @@ export const appeals = pgTable(
     explanation: text("explanation").notNull(),
     status: varchar("status", { length: 12 }).notNull().default("pending"),
     createdAt: instant("created_at").notNull(),
-    decidedByUserId: uuid("decided_by_user_id").references(
-      () => users.userId,
-      { onDelete: "restrict" },
-    ),
+    decidedByUserId: uuid("decided_by_user_id").references(() => users.userId, {
+      onDelete: "restrict",
+    }),
     decidedAt: instant("decided_at"),
     decisionReason: text("decision_reason"),
   },
   (t) => [
-    check("appeals_status_check", sql`${t.status} IN ('pending', 'accepted', 'rejected')`),
-    check("appeals_explanation_check", sql`length(btrim(${t.explanation})) > 0`),
+    check(
+      "appeals_status_check",
+      sql`${t.status} IN ('pending', 'accepted', 'rejected')`,
+    ),
+    check(
+      "appeals_explanation_check",
+      sql`length(btrim(${t.explanation})) > 0`,
+    ),
     check(
       "appeals_decision_fields_consistent",
       sql`(${t.status} = 'pending' AND ${t.decidedByUserId} IS NULL AND ${t.decidedAt} IS NULL AND ${t.decisionReason} IS NULL) OR (${t.status} IN ('accepted', 'rejected') AND ${t.decidedByUserId} IS NOT NULL AND ${t.decidedAt} IS NOT NULL AND ${t.decisionReason} IS NOT NULL)`,
@@ -153,7 +159,10 @@ export const gradeAdjustments = pgTable(
       sql`(${t.adjustmentType} = 'appeal_accepted' AND ${t.appealId} IS NOT NULL) OR (${t.adjustmentType} = 'manual_correction' AND ${t.appealId} IS NULL)`,
     ),
     index("grade_adjustments_grade_created_idx").on(t.gradeId, t.createdAt),
-    index("grade_adjustments_actor_created_idx").on(t.changedByUserId, t.createdAt),
+    index("grade_adjustments_actor_created_idx").on(
+      t.changedByUserId,
+      t.createdAt,
+    ),
     uniqueIndex("grade_adjustments_appeal_once_idx")
       .on(t.appealId)
       .where(sql`${t.appealId} IS NOT NULL`),
@@ -172,5 +181,10 @@ export const labPublications = pgTable(
     publishedAt: instant("published_at").notNull(),
     createdAt: instant("created_at").notNull(),
   },
-  (t) => [index("lab_publications_actor_published_idx").on(t.publishedByUserId, t.publishedAt)],
+  (t) => [
+    index("lab_publications_actor_published_idx").on(
+      t.publishedByUserId,
+      t.publishedAt,
+    ),
+  ],
 );

@@ -15,12 +15,9 @@ export const auditEvents = pgTable(
   "audit_events",
   {
     auditEventId: identity("audit_event_id"),
-    actorUserId: uuid("actor_user_id").references(
-      () => users.userId,
-      {
-        onDelete: "restrict",
-      },
-    ),
+    actorUserId: uuid("actor_user_id").references(() => users.userId, {
+      onDelete: "restrict",
+    }),
     actorKind: varchar("actor_kind", { length: 16 }).notNull(),
     entityType: varchar("entity_type", { length: 64 }).notNull(),
     entityId: varchar("entity_id", { length: 128 }).notNull(),

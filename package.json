@@ -10,8 +10,8 @@
     "start": "bun src/index.ts",
     "test": "bun test",
     "lint": "biome lint .",
-    "format": "biome format --write .",
-    "format:check": "biome check --formatter-enabled=true --linter-enabled=false --assist-enabled=false .",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.jsonc\" \".prettierrc.json\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"*.jsonc\" \".prettierrc.json\"",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -28,6 +28,7 @@
     "@types/pg": "^8.23.1",
     "bun-types": "latest",
     "drizzle-kit": "^1.0.0-rc.5",
+    "prettier": "^3.10.1",
     "tsx": "^4.23.15",
     "typescript": "5.9.3"
   },
