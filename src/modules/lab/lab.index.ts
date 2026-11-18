@@ -2,8 +2,8 @@ import { Elysia } from "elysia";
 import { mapApiError } from "../../libs/errors/problem-details";
 import { rbac } from "../../plugins/role.plugin";
 import type { JwtPlugins } from "../../plugins/jwt.plugin";
-import type { LabService } from "./service";
-import * as LabModel from "./model";
+import type { LabService } from "./lab.service";
+import * as LabModel from "./lab.model";
 
 export const createLabModule = (deps: {
   labService: LabService;

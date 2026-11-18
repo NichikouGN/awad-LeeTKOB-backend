@@ -10,15 +10,19 @@ import { ClassRepository } from "./modules/class/class.repository";
 import { UserRepository } from "./modules/user/user.repository";
 import { UserService } from "./modules/user/user.service";
 import { ClassService } from "./modules/class/class.service";
-import { createLabModule } from "./modules/lab";
-import { DrizzleLabRepository } from "./modules/lab/repository";
-import { LabService } from "./modules/lab/service";
+import { createLabModule } from "./modules/lab/lab.index";
+import { DrizzleLabRepository } from "./modules/lab/lab.repository";
+import { LabService } from "./modules/lab/lab.service";
+import { createSubmissionModule } from "./modules/submissions/submission.index";
+import { DrizzleSubmissionRepository } from "./modules/submissions/submission.repository";
+import { SubmissionService } from "./modules/submissions/submission.service";
 
 interface AppDependencies {
   db?: typeof db;
   userService?: UserService;
   classService?: ClassService;
   labService?: LabService;
+  submissionService?: SubmissionService;
 }
 const loadEnv = (name: string) => {
   const env = process.env[name];
@@ -44,6 +48,10 @@ export const createApp = (deps: AppDependencies = {}) => {
   const labRepository = new DrizzleLabRepository(database);
   const labService =
     deps.labService ?? new LabService(labRepository, classService);
+  const submissionRepository = new DrizzleSubmissionRepository(database);
+  const submissionService =
+    deps.submissionService ??
+    new SubmissionService(submissionRepository, labService, classService);
 
   return new Elysia()
     .use(openapi())
@@ -67,7 +75,13 @@ export const createApp = (deps: AppDependencies = {}) => {
         jwtAuth: jwtPlugins.jwtAuth,
       }),
     )
-    .use(createLabModule({ labService, jwtAuth: jwtPlugins.jwtAuth }));
+    .use(createLabModule({ labService, jwtAuth: jwtPlugins.jwtAuth }))
+    .use(
+      createSubmissionModule({
+        submissionService,
+        jwtAuth: jwtPlugins.jwtAuth,
+      }),
+    );
 };
 
 export const app = createApp();

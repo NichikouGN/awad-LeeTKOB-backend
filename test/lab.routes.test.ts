@@ -1,7 +1,7 @@
 import { describe, expect, it, mock } from "bun:test";
 import { Elysia } from "elysia";
-import { createLabModule } from "../src/modules/lab";
-import type { LabService } from "../src/modules/lab/service";
+import { createLabModule } from "../src/modules/lab/lab.index";
+import type { LabService } from "../src/modules/lab/lab.service";
 import { createJwtPlugins } from "../src/plugins/jwt.plugin";
 
 const classId = "64d0d19a-73e8-4d19-bae2-1d6c0f10f397";

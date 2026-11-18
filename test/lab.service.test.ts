@@ -1,7 +1,7 @@
 import { describe, expect, it, mock } from "bun:test";
 import { AppError } from "../src/libs/errors/app-error";
-import { LabService } from "../src/modules/lab/service";
-import type { LabRepository } from "../src/modules/lab/repository";
+import { LabService } from "../src/modules/lab/lab.service";
+import type { LabRepository } from "../src/modules/lab/lab.repository";
 import type { ClassProvider } from "../src/modules/class/interface/class-provider";
 
 const classId = "64d0d19a-73e8-4d19-bae2-1d6c0f10f397";
@@ -57,6 +57,12 @@ const makeService = (
     findById: mock(async () =>
       options.lab === undefined ? savedLab : options.lab,
     ),
+    findSubmissionPolicy: mock(async () => ({
+      labId,
+      classId,
+      opensAt: savedLab.opensAt,
+      deadlineAt: savedLab.deadlineAt,
+    })),
     listByClass: mock(async () => [savedLab]),
   };
   return {
@@ -137,5 +143,15 @@ describe("lab authoring service", () => {
       input: "3\n3 1 2\n",
       expectedOutput: "1 2 3\n",
     });
+  });
+
+  it("returns only schedule and class data to submission policy callers", async () => {
+    const { service, repository } = makeService();
+
+    const policy = await service.getSubmissionPolicy(labId);
+
+    expect(policy).toMatchObject({ labId, classId, status: "scheduled" });
+    expect(policy).not.toHaveProperty("tests");
+    expect(repository.findById).not.toHaveBeenCalled();
   });
 });

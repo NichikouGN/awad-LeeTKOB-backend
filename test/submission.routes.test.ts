@@ -1,5 +1,6 @@
 import { describe, expect, it, mock } from "bun:test";
 import { Elysia } from "elysia";
+import { AppError } from "../src/libs/errors/app-error";
 import { createSubmissionModule } from "../src/modules/submissions/submission.index";
 import type { SubmissionService } from "../src/modules/submissions/submission.service";
 import { createJwtPlugins } from "../src/plugins/jwt.plugin";
@@ -121,6 +122,43 @@ describe("submission routes", () => {
     expect(submissionService.getOwn).toHaveBeenCalledWith({
       submissionId,
       studentUserId: "student-id",
+    });
+  });
+
+  it("maps oversized payload errors to the contract problem type", async () => {
+    const failingService = {
+      submit: mock(async () => {
+        throw new AppError(
+          413,
+          "Source exceeds the byte limit",
+          "payload-too-large",
+        );
+      }),
+      getOwn: mock(async () => submission),
+    };
+    const app = new Elysia().use(
+      createSubmissionModule({
+        submissionService: failingService as unknown as SubmissionService,
+        jwtAuth: jwtPlugins.jwtAuth,
+      }),
+    );
+    const studentToken = await tokenFor("student-id", "STU");
+    const response = await request(
+      app,
+      `/labs/${labId}/submissions`,
+      studentToken,
+      "POST",
+      { source: "x" },
+      "attempt-1",
+    );
+
+    expect(response.status).toBe(413);
+    expect(response.headers.get("content-type")).toContain(
+      "application/problem+json",
+    );
+    expect(await response.json()).toMatchObject({
+      type: "https://leetkob.example/problems/payload-too-large",
+      status: 413,
     });
   });
 });

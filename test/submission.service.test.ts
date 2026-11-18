@@ -60,7 +60,9 @@ const makeService = (
       if (options.createError) throw options.createError;
       return queued;
     }),
-    findOwnedById: mock(async () => options.owned ?? queued),
+    findOwnedById: mock(async () =>
+      options.owned === undefined ? queued : options.owned,
+    ),
   };
   return {
     labProvider,
@@ -136,6 +138,7 @@ describe("submission service", () => {
     });
     await expect(beforeOpen.service.submit(submit())).rejects.toMatchObject({
       status: 409,
+      problemType: "submission-closed",
     });
 
     const atDeadline = makeService({
@@ -148,6 +151,7 @@ describe("submission service", () => {
     });
     await expect(atDeadline.service.submit(submit())).rejects.toMatchObject({
       status: 409,
+      problemType: "submission-closed",
     });
     expect(beforeOpen.repository.createQueued).not.toHaveBeenCalled();
     expect(atDeadline.repository.createQueued).not.toHaveBeenCalled();
@@ -161,8 +165,30 @@ describe("submission service", () => {
     });
     await expect(
       service.submit(submit({ source: "x".repeat(65_537) })),
-    ).rejects.toMatchObject({ status: 413 });
+    ).rejects.toMatchObject({ status: 413, problemType: "payload-too-large" });
     expect(repository.createQueued).not.toHaveBeenCalled();
+  });
+
+  it("requires a visible-ASCII idempotency key", async () => {
+    const { service, repository } = makeService();
+
+    await expect(
+      service.submit(submit({ idempotencyKey: null })),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      service.submit(submit({ idempotencyKey: "contains space" })),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(repository.createQueued).not.toHaveBeenCalled();
+  });
+
+  it("returns unavailable when the submission and queue records cannot commit", async () => {
+    const { service } = makeService({
+      createError: new Error("database down"),
+    });
+
+    await expect(service.submit(submit())).rejects.toMatchObject({
+      status: 503,
+    });
   });
 
   it("replays the same idempotency key and source even after the deadline", async () => {

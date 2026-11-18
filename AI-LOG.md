@@ -67,4 +67,20 @@ and use the previously selected lab-publish endpoint.
 - **Rejected:** editing or weakening the test to accept publishing while reviews
   remain pending.
 
+### P-03 — PA3 submission intake and module naming
+
+> ok can you help me continue with the submissions flow? rename the files too so it doesnt just stay like index.ts but more like submission.index.ts. same as always check the type, tests for me would you
+
+Scope: finalize the student submission and snapshot contract, add tests before
+implementation, then implement durable asynchronous intake and run the
+repository checks.
+
+## Changed / Rejected
+
+- **Changed:** use the lab and class service boundaries to enforce the lab
+  window and active membership; persist a submission, judge job, and outbox
+  event atomically; support idempotent retry and owner-only snapshots.
+- **Rejected:** compiling or judging in the HTTP request handler. The request
+  only records durable work; a separate worker and sandbox are the next slice.
+
 See F-01 through F-04 for the earlier implementation findings and decisions.

@@ -20,6 +20,10 @@ const titleFor = (status: number) => {
       return "Conflict";
     case 422:
       return "Unprocessable request";
+    case 413:
+      return "Payload too large";
+    case 503:
+      return "Service unavailable";
     default:
       return "Internal error";
   }
@@ -38,19 +42,25 @@ export function mapApiError(error: unknown, set: ErrorSet) {
   }
 
   const slug =
-    status === 400
-      ? "validation"
-      : status === 401
-        ? "authentication-required"
-        : status === 403
-          ? "forbidden"
-          : status === 404
-            ? "not-found"
-            : status === 409
-              ? "conflict"
-              : status === 422
-                ? "unprocessable"
-                : "internal";
+    error instanceof AppError && error.problemType
+      ? error.problemType
+      : status === 400
+        ? "validation"
+        : status === 401
+          ? "authentication-required"
+          : status === 403
+            ? "forbidden"
+            : status === 404
+              ? "not-found"
+              : status === 409
+                ? "conflict"
+                : status === 413
+                  ? "payload-too-large"
+                  : status === 422
+                    ? "unprocessable"
+                    : status === 503
+                      ? "unavailable"
+                      : "internal";
 
   set.status = status;
   set.headers["content-type"] = "application/problem+json";

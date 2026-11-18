@@ -1,8 +1,14 @@
 import { AppError } from "../../libs/errors/app-error";
 import type { ClassProvider } from "../class/interface/class-provider";
 import type { ClassDetailReq } from "../class/class.type";
-import type { LabRepository } from "./repository";
-import type { CreateLabInput, LabActor, LabRecord, LabRole } from "./types";
+import type { LabRepository } from "./lab.repository";
+import type {
+  CreateLabInput,
+  LabActor,
+  LabRecord,
+  LabRole,
+  LabSubmissionProvider,
+} from "./lab.type";
 
 const MAX_STATEMENT_BYTES = 256 * 1024;
 const MAX_CONSTRAINT_BYTES = 8 * 1024;
@@ -122,7 +128,7 @@ function validateInput(input: CreateLabInput): {
   return { title, opensAt, deadlineAt };
 }
 
-export class LabService {
+export class LabService implements LabSubmissionProvider {
   constructor(
     private readonly repository: LabRepository,
     private readonly classProvider: ClassProvider,
@@ -192,7 +198,7 @@ export class LabService {
   }
 
   async getSubmissionPolicy(labId: string) {
-    const record = await this.repository.findById(labId);
+    const record = await this.repository.findSubmissionPolicy(labId);
     if (!record) throw new AppError(404, "Lab not found");
     return {
       labId: record.labId,

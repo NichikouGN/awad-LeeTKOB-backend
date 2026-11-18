@@ -1,6 +1,6 @@
 # LeeTKOB API Contracts — Proposed Product API
 
-**Status:** detailed planning contract for team alignment. The approved PA2 publish contract is [`../contract/post-lab-publish.md`](../contract/post-lab-publish.md); the final-product publish contract is [`../contract/post-lab-publish-v2.md`](../contract/post-lab-publish-v2.md). Proposed endpoints below need review/approval as product contracts before implementation. Examples use illustrative IDs/timestamps and must be reflected in schemas and contract tests.
+**Status:** detailed API inventory for team alignment. Routes with an approved standalone contract are governed by that contract; remaining proposed endpoints below need review/approval before implementation. Approved documents include [`../contract/labs.md`](../contract/labs.md), [`../contract/submissions.md`](../contract/submissions.md), the PA2 publish contract [`../contract/post-lab-publish.md`](../contract/post-lab-publish.md), and the final-product publish contract [`../contract/post-lab-publish-v2.md`](../contract/post-lab-publish-v2.md). Examples use illustrative IDs/timestamps and should be reflected in schemas and contract tests.
 
 ## 1. Global rules
 

@@ -9,14 +9,17 @@ The system still uses asynchronous durable jobs for expensive or isolated work. 
 ### Current implementation status
 
 The target architecture and workflows in this document remain the final-system
-design. The current `src/app.ts` mounts auth, user, class, and lab modules. Lab
-routes create a lab, list labs in a visible class, and return a student-safe
-lab detail. Creation persists the initial constraints, constraint revisions,
-and private tests in one transaction. The lab service also exposes submission
-policy and judge-bundle capabilities for downstream modules. Submission,
-judging, model review, publish, and appeal routes/workers are not yet wired;
-the PA2 publish contract remains a contract, not a working route. Additional
-module and schema files do not imply those end-to-end workflows run.
+design. The current `src/app.ts` mounts auth, user, class, lab, and submission
+modules. Lab routes create a lab, list labs in a visible class, and return a
+student-safe lab detail. Creation persists the initial constraints, constraint
+revisions, and private tests in one transaction. Submission routes accept
+student source, enforce class membership and the lab window, and atomically
+persist the submission, judge job, and outbox event. A student can read their
+own submission snapshot. The lab service exposes submission policy and a
+judge-only test bundle to trusted module consumers. The outbox dispatcher,
+judge worker, sandbox, model review, publish, and appeal workflows are not yet
+wired; the PA2 publish contract remains a contract, not a working route.
+Additional module and schema files do not imply those end-to-end workflows run.
 
 Some implementation choices now replace open design decisions: the app uses
 email/password credentials with Bun bcrypt hashing and signed access/refresh

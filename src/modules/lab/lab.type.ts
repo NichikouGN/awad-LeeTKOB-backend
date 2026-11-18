@@ -1,5 +1,19 @@
 export type LabRole = "ADMIN" | "TA" | "STU";
 
+export interface SubmissionLabPolicy {
+  labId: string;
+  classId: string;
+  opensAt: Date;
+  deadlineAt: Date;
+  status: "scheduled" | "open" | "closed";
+}
+
+export interface LabSubmissionProvider {
+  getSubmissionPolicy(labId: string): Promise<SubmissionLabPolicy>;
+}
+
+export type LabSubmissionPolicyRecord = Omit<SubmissionLabPolicy, "status">;
+
 export interface CreateLabInput {
   userId: string;
   role: LabRole;

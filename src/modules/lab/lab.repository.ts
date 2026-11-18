@@ -6,11 +6,19 @@ import {
   labs,
   testCases,
 } from "../../db/schema/labs.schema";
-import type { LabCreateRecord, LabRecord, LabSummaryRecord } from "./types";
+import type {
+  LabCreateRecord,
+  LabRecord,
+  LabSubmissionPolicyRecord,
+  LabSummaryRecord,
+} from "./lab.type";
 
 export interface LabRepository {
   create(record: LabCreateRecord): Promise<LabRecord>;
   findById(labId: string): Promise<LabRecord | null>;
+  findSubmissionPolicy(
+    labId: string,
+  ): Promise<LabSubmissionPolicyRecord | null>;
   listByClass(
     classId: string,
     offset: number,
@@ -140,6 +148,22 @@ export class DrizzleLabRepository implements LabRepository {
         expectedOutput: test.expectedOutput,
       })),
     };
+  }
+
+  async findSubmissionPolicy(
+    labId: string,
+  ): Promise<LabSubmissionPolicyRecord | null> {
+    const [record] = await this.db
+      .select({
+        labId: labs.labId,
+        classId: labs.classId,
+        opensAt: labs.opensAt,
+        deadlineAt: labs.deadlineAt,
+      })
+      .from(labs)
+      .where(eq(labs.labId, labId))
+      .limit(1);
+    return record ?? null;
   }
 
   async listByClass(
