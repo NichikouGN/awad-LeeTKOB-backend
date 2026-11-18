@@ -1,14 +1,18 @@
 import { Elysia } from "elysia";
 import { openapi } from "@elysia/openapi";
 import { createAuthModule } from "./modules/auth/auth.index";
-import { createUserModule } from "./modules/users/users.index";
-import { UserService } from "./modules/users/users.service";
-import { UserRepository } from "./modules/users/users.repository";
+import { createUserModule } from "./modules/user/user.index";
+import { createClassModule } from "./modules/class/class.index";
+import { UserService } from "./modules/user/user.service";
+import { UserRepository } from "./modules/user/user.repository";
+import { ClassService } from "./modules/class/class.service";
+import { ClassRepository } from "./modules/class/class.repository";
 import { db } from "./db/db";
 
 interface AppDependencies {
   db?: typeof db;
   userService?: UserService;
+  classService?: ClassService;
 }
 
 export const createApp = (deps: AppDependencies = {}) => {
@@ -17,10 +21,14 @@ export const createApp = (deps: AppDependencies = {}) => {
   const userRepository = new UserRepository(database);
   const userService = deps.userService ?? new UserService(userRepository);
 
+  const classRepository = new ClassRepository(database);
+  const classService = deps.classService ?? new ClassService(classRepository);
+
   return new Elysia()
     .use(openapi())
     .use(createUserModule(userService))
-    .use(createAuthModule(userService));
+    .use(createAuthModule(userService))
+    .use(createClassModule(classService));
 };
 
 export const app = createApp();

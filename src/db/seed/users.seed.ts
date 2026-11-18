@@ -8,6 +8,8 @@ export async function seedUsers() {
     {
       email: "seed:admin",
       displayName: "Demo Admin",
+      passwordHash:
+        "$2b$12$MA1KkO1I3U8.AwuWQIOAY.HGEmqjxiqjA7pxxsIxdfRGoTeDSSFFS", //1234
       role: "ADMIN",
       userStatus: "ACTIVE",
       createdAt: now,
@@ -16,6 +18,7 @@ export async function seedUsers() {
     {
       email: "seed:ta",
       displayName: "Demo TA",
+      passwordHash: "123",
       role: "TA",
       userStatus: "ACTIVE",
       createdAt: now,
@@ -24,6 +27,7 @@ export async function seedUsers() {
     {
       email: "seed:student",
       displayName: "Demo Student",
+      passwordHash: "123",
       role: "STU",
       userStatus: "ACTIVE",
       createdAt: now,

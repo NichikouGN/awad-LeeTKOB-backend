@@ -1,9 +1,15 @@
+import { UserRole } from "../user/user.type";
+import type { JWTPayloadSpec } from "@elysia/jwt";
+
+export type JwtPayload = {
+  userId: string;
+  type: "access" | "refresh";
+  role: UserRole;
+};
+
 export type jwtSigner = {
-  sign(payload: {
-    sub: string;
-    type: "access" | "refresh";
-    role: "teacher" | "admin" | "student";
-  }): Promise<string>;
+  sign(payload: JwtPayload): Promise<string>;
+  // verify(token: string): Promise<JwtPayload | false>;
 };
 
 export class TokenService {
@@ -14,15 +20,15 @@ export class TokenService {
 
   async issueToken(
     userId: string,
+    role: UserRole,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    const role = "teacher";
     const accessToken = await this.access.sign({
-      sub: userId,
+      userId: userId,
       role: role,
       type: "access",
     });
     const refreshToken = await this.refresh.sign({
-      sub: userId,
+      userId: userId,
       role: role,
       type: "refresh",
     });
@@ -30,19 +36,17 @@ export class TokenService {
     return { accessToken, refreshToken };
   }
 
-  generateAccessToken(userId: string): Promise<string> {
-    const role = "teacher";
+  generateAccessToken(userId: string, role: UserRole): Promise<string> {
     return this.access.sign({
-      sub: userId,
+      userId: userId,
       role: role,
       type: "access",
     });
   }
 
-  generateRefreshToken(userId: string): Promise<string> {
-    const role = "teacher";
+  generateRefreshToken(userId: string, role: UserRole): Promise<string> {
     return this.refresh.sign({
-      sub: userId,
+      userId: userId,
       role: role,
       type: "refresh",
     });

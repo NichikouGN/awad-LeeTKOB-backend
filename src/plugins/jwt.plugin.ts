@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { jwt } from "@elysia/jwt";
 import "dotenv/config";
+import { AppError } from "../libs/errors/app-error";
 
 const JWT_ACCESS_TOKEN = process.env.JWT_ACCESS_TOKEN;
 const JWT_REFRESH_TOKEN = process.env.JWT_REFRESH_TOKEN;
@@ -20,34 +21,42 @@ export const refreshJwt = jwt({
   exp: "7d",
 });
 
+const isUserRole = (role: unknown): role is "ADMIN" | "TA" | "STU" =>
+  role === "ADMIN" || role === "TA" || role === "STU";
+
 // Reusable Plugin to perform jwt check
 export const jwtAuth = new Elysia({ name: "plugin.auth" })
   .use(accessJwt)
   .use(refreshJwt)
   .macro({
-    jwtAuth: {
-      derive: async ({ headers, status, access }) => {
+    jwtAuth: (tokenType: "access" | "refresh") => ({
+      derive: async ({ headers, status, access, refresh }) => {
         const authorization = headers.authorization;
 
         if (!authorization?.startsWith("Bearer ")) {
-          return status(401, "Unauthorized");
+          throw new AppError(401, "Unauthorized");
         }
 
         const token = authorization.slice(7);
-        console.log(`token extracted: ${token}`);
-        const payload = await access.verify(token);
+
+        const verifier = tokenType === "access" ? access : refresh;
+        const payload = await verifier.verify(token);
 
         if (
           !payload ||
-          typeof payload.sub !== "string" ||
-          payload.type !== "access"
+          typeof payload.userId !== "string" ||
+          payload.type !== tokenType ||
+          !isUserRole(payload.role)
         ) {
-          return status(401, "Invalid or expired token");
+          throw new AppError(401, "Invalid or Expired token");
         }
 
-        return {
-          userId: payload.sub,
+        const jwtPayload = {
+          userId: payload.userId,
+          role: payload.role,
         };
+
+        return { jwtPayload };
       },
-    },
+    }),
   });
