@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@elysia/cors": "1.4.3",
     "@elysia/html": "^1.4.1",
     "@elysia/jwt": "^2.0.0-rc.0",
     "@elysia/openapi": "^2.0.0-rc.1",

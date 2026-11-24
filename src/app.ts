@@ -1,4 +1,5 @@
 import { Elysia } from "elysia";
+import { createCorsPlugin } from "./plugins/cors.plugin";
 import { db } from "./db/db";
 import "dotenv/config";
 import { openapi } from "@elysia/openapi";
@@ -54,6 +55,7 @@ export const createApp = (deps: AppDependencies = {}) => {
     new SubmissionService(submissionRepository, labService, classService);
 
   return new Elysia()
+    .use(createCorsPlugin())
     .use(openapi())
     .use(
       createAuthModule({
