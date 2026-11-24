@@ -1,6 +1,14 @@
-import { readdir, readFile, mkdir, writeFile } from "node:fs/promises";
+import {
+  readdir,
+  readFile,
+  mkdir,
+  writeFile,
+  appendFile,
+} from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { ConstraintReviewService } from "./service";
+import { createConfiguredReviewer } from "./config";
+import { MemoryModelLedger } from "./model-ledger";
+import { GEMINI_MODEL } from "./gemini-model";
 import type { ConstraintInput } from "./contract";
 
 async function problemFolders(root: string): Promise<string[]> {
@@ -58,7 +66,17 @@ export async function runChecker(
   const predictions: string[] = [];
   const decisions: string[] = [];
   let solutionId = "";
-  const reviewer = new ConstraintReviewService({
+  await mkdir(dirname(resolve(output)), { recursive: true });
+  await writeFile(`${output}.calls.jsonl`, "", { mode: 0o600 });
+  const ledger = new MemoryModelLedger({
+    onRecord: async (record) => {
+      await appendFile(`${output}.calls.jsonl`, `${JSON.stringify(record)}\n`, {
+        mode: 0o600,
+      });
+    },
+  });
+  const reviewer = createConfiguredReviewer({
+    ledger,
     onDecision: (decision) =>
       decisions.push(JSON.stringify({ solution: solutionId, ...decision })),
   });
@@ -83,6 +101,7 @@ export async function runChecker(
       );
 
       const verdicts = await reviewer.review({
+        labId: `eval:${basename(folder)}`,
         statement,
         constraints,
         sourceCode,
@@ -103,6 +122,29 @@ export async function runChecker(
   await mkdir(dirname(resolve(output)), { recursive: true });
   await writeFile(output, `${predictions.join("\n")}\n`);
   await writeFile(`${output}.decisions.jsonl`, `${decisions.join("\n")}\n`);
+  const calls = ledger.records();
+  await writeFile(
+    `${output}.cost-summary.json`,
+    `${JSON.stringify(
+      {
+        model: GEMINI_MODEL,
+        calls: calls.length,
+        completed: calls.filter((call) => call.status === "completed").length,
+        estimatedCostUsd:
+          calls.reduce((sum, call) => sum + (call.usage?.costMicros ?? 0), 0) /
+          1_000_000,
+        paidEquivalentBudgetAccountedUsd:
+          calls.reduce(
+            (sum, call) =>
+              sum + (call.usage?.estimatedCostMicros ?? call.reservedMicros),
+            0,
+          ) / 1_000_000,
+        uncertainCharges: calls.filter((call) => !call.usage).length,
+      },
+      null,
+      2,
+    )}\n`,
+  );
 
   return predictions.length;
 }

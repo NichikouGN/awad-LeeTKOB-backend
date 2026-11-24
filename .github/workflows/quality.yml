@@ -45,7 +45,7 @@ jobs:
         env:
           HARD_RULE_INTEGRATION: "1"
           MODEL_OFF: "1"
-        run: bun test test/hard-rule.integration.test.ts
+        run: bun test test/hard-rule.integration.test.ts test/model-ledger.integration.test.ts
       - name: Build and run model-off checker without network
         run: |
           docker build -f Dockerfile.checker -t leetkob-checker:local .

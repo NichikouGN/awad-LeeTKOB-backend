@@ -98,10 +98,21 @@ export class JudgeWorker {
         phase = "review";
         let review: ConstraintVerdict[] = [];
         if (result.overallVerdict === "AC") {
+          const identityValues =
+            source.studentUserId && this.options.identityProvider
+              ? await this.options.identityProvider.getReviewIdentity(
+                  source.studentUserId,
+                )
+              : [];
+          if (this.options.requireReviewIdentity && !identityValues.length)
+            throw new Error("Review identity metadata is unavailable");
           if (!this.options.reviewer && bundle.constraints.length)
             throw new Error("Constraint reviewer is not configured");
           if (this.options.reviewer)
             review = await this.options.reviewer.review({
+              labId: source.labId,
+              attemptNumber: claim.attemptCount,
+              identityValues,
               submissionId: claim.submissionId,
               statement: bundle.statement,
               constraints: bundle.constraints.map(({ id, text }) => ({

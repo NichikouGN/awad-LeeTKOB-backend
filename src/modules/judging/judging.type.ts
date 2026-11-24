@@ -53,6 +53,8 @@ export type SandboxRunner = {
   }): Promise<JudgeResult>;
 };
 export type JudgeWorkerOptions = {
+  identityProvider?: { getReviewIdentity(userId: string): Promise<string[]> };
+  requireReviewIdentity?: boolean;
   reviewer?: ConstraintReviewer;
   workerId: string;
   leaseMs: number;

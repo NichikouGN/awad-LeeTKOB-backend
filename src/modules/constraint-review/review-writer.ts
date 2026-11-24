@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { ReviewWriter } from "./contract";
+import type { ReviewWriter, ModelUsage } from "./contract";
 
 // The judge owns the transaction. Review data is committed with the judge result,
 // after the lease is fenced, so redelivery cannot create another stored result set.
@@ -31,10 +31,27 @@ export class PostgresReviewWriter implements ReviewWriter {
     const runId = randomUUID();
     const hasModel = input.verdicts.some((v) => v.method === "model");
     const hasHard = input.verdicts.some((v) => v.method === "hard_rule");
+    const calls = hasModel
+      ? (
+          await transaction.query<{
+            usage: ModelUsage | null;
+            requested_model: string;
+          }>(
+            "SELECT usage, requested_model FROM model_calls WHERE submission_id=$1 AND attempt_number=$2",
+            [input.submissionId, input.attemptNumber],
+          )
+        ).rows
+      : [];
+    const knownUsage = calls.flatMap((call) =>
+      call.usage ? [call.usage] : [],
+    );
+    const allUsageKnown =
+      calls.length > 0 && knownUsage.length === calls.length;
     await transaction.query(
       `INSERT INTO review_runs
-       (review_run_id, submission_id, attempt_number, status, method_summary, started_at, completed_at, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $6, $6)`,
+       (review_run_id, submission_id, attempt_number, status, method_summary, started_at, completed_at, created_at,
+        provider_name, model_name, input_tokens, output_tokens, cost_usd)
+       VALUES ($1, $2, $3, $4, $5, $6, $6, $6, $7, $8, $9, $10, $11)`,
       [
         runId,
         input.submissionId,
@@ -44,6 +61,27 @@ export class PostgresReviewWriter implements ReviewWriter {
           : "completed",
         hasModel ? (hasHard ? "mixed" : "model") : "hard_rule",
         input.now,
+        calls.length ? "gemini" : null,
+        calls.length
+          ? [...new Set(calls.map((call) => call.requested_model))]
+              .join(",")
+              .slice(0, 160)
+          : null,
+        allUsageKnown
+          ? knownUsage.reduce((sum, usage) => sum + usage.inputTokens, 0)
+          : null,
+        allUsageKnown
+          ? knownUsage.reduce(
+              (sum, usage) => sum + usage.outputTokens + usage.thinkingTokens,
+              0,
+            )
+          : null,
+        allUsageKnown
+          ? (
+              knownUsage.reduce((sum, usage) => sum + usage.costMicros, 0) /
+              1_000_000
+            ).toFixed(6)
+          : null,
       ],
     );
     // These are provisional proposals. The TA queue must select counted
