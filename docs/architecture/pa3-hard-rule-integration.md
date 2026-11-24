@@ -33,10 +33,10 @@ not a self-assessed PA3 total or evidence of a public deployment.
 4. The worker reviews only `AC` results. `ReviewWriter` is an explicit transaction
    capability: the judge transaction owns the lease fence and commits judge and
    review results together. Persistence does not read or write grades.
-5. All proposals remain pending and provisional. There is currently no review
-   HTTP API. That workflow must select counted submissions (FAQ-02), keep every
-   violation/unsure pending, and sample passes across the whole lab (FAQ-10).
-   This slice does not auto-resolve pass proposals or claim sampling is complete.
+5. Proposals remain provisional until an assigned TA decides them through the
+   review queue API/frontend. The queue selects counted submissions (FAQ-02),
+   includes pending violation/unsure and a rounded-up 10% pass sample across the
+   lab (FAQ-10). Decisions preserve history and never publish grades.
 6. The CLI writes prediction JSONL and an adjacent per-pair decision log. Our five
    custom solutions are separate from the unavailable lecturer dataset. The
    Dockerfile supports running the checker without a database, Redis, Docker
@@ -102,9 +102,10 @@ afterward; the reusable checker and judge images remain available locally.
   removal, schema/evidence validation, timeout and a persistent per-lab budget.
   Add a key and verify one genuine provider/dev-set run. No hosted call or
   official model evaluation is claimed by the offline checks.
-- Implement the TA-only review queue API with class ownership and latest counted
-  submission selection (FAQ-02) and lab-wide pass sampling (FAQ-10). Students
-  must not see proposals (FAQ-08).
+- The TA queue API and frontend now support class ownership, latest counted
+  submissions (FAQ-02), lab-wide pass sampling and decision history (FAQ-10).
+  Verify this workflow on the public deployment; students cannot read proposals
+  through these endpoints (FAQ-08).
 - Keep publication blocked until required reviews are resolved (FAQ-12). The
   old publish contract test file is currently commented out and its route is not
   mounted; its presence is not evidence of a working publish gate.

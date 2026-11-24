@@ -103,8 +103,13 @@ two semantic constraints per submission would make that $0.216.
 optional HTTP request IDs, usage, latency and cost estimates. `review_runs`
 aggregates known usage. Checker runs also write `.calls.jsonl` and
 `.cost-summary.json` next to predictions; their budget applies per problem per
-invocation. A real provider run has not been verified: no key was supplied and
-no hosted call was made. There is no local fake Gemini server or endpoint override.
+invocation. Live smoke tests on 2026-11-25 authenticated model listing, but
+generation with both configured Flash-Lite and 2.5 Flash-Lite returned HTTP 402
+(`RESOURCE_EXHAUSTED`: prepayment credits depleted). No successful model verdict,
+token usage, charge or dev-set score is claimed. Check the Google project's
+billing/free-tier eligibility in AI Studio; setting `GEMINI_BILLING_TIER=free`
+only affects application estimates and does not change Google billing.
+There is no local fake Gemini server or endpoint override.
 
 Submission intake writes the submission, judge job, and outbox event in one
 PostgreSQL transaction. A trigger sends a transactional notification after
@@ -121,8 +126,8 @@ See [`PERMISSIONS.md`](PERMISSIONS.md) for assistant permissions and
 Accepted submissions now run the C++ syntax-aware ban-list checker before any
 semantic adapter. Review proposals, exact evidence, and the frozen constraint
 revision are committed atomically with the judge result. They never write grades
-or appear in student snapshots. A TA review HTTP API is still needed; stored
-proposals alone do not complete the PA3 walkthrough. See the
+or appear in student snapshots. Assigned TAs can inspect and decide proposals
+through the review queue API and frontend. See the
 [integration audit](docs/architecture/pa3-hard-rule-integration.md).
 
 The checker reads `statement.md`, `constraints.json` (an array of `{id,text}` or
@@ -187,3 +192,17 @@ precedence if they conflict.
 [`AGENTS.md`](AGENTS.md) is the repository instruction file. Contract changes
 must be made separately from implementation changes, and tests/evaluation data
 must not be edited to make a check pass.
+
+## TA review queue
+
+TA: open **Quản lý Lab → Hàng chờ review** for a lab, or
+`/ta/labs/<labId>/reviews` in the frontend. The API is documented in
+[ta-review-queue.md](docs/contract/ta-review-queue.md).
+Queue view shows pending violations/unsure and a lab-wide rounded-up 10% sample
+of passes. All view permits inspecting and overriding every current verdict.
+Only the latest pre-deadline submission per student counts (FAQ-02).
+Open the source, choose exact evidence lines, explicitly select pass/violation,
+and supply a reason. Decisions record actor, time and version; competing edits
+return 409 and require a refresh. No grade/publication is written.
+Only an assigned TA can access the queue; student snapshots stay unchanged.
+No new database migration is required for this queue; it uses existing review tables.

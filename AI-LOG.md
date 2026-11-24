@@ -213,3 +213,35 @@ existing worker and sandbox boundaries.
 - **Rejected:** dispatching directly from the submission HTTP handler or using
   Redis as the durable source of truth. PostgreSQL remains authoritative and
   reconstructs queue work after notifications or Redis jobs are lost.
+
+## P-10 — TA review queue (2026-11-25)
+
+- **Request:** implement the TA review queue in backend and frontend.
+- **Changed:** committed the API contract before implementation; added Drizzle
+  queries for latest counted submissions/current revisions, lab-wide 10% pass
+  sampling, class-authorized TA endpoints and a paginated review screen.
+  Explicit pass/violation decisions require a reason and exact source evidence
+  for violations, preserve append-only history, and reject stale concurrent edits.
+  They do not create grades or publish anything.
+- **Rejected:** showing all historical Accepted submissions in the queue, giving
+  unsure a default deduction, or exposing proposals to students (FAQ-02/08/09/10).
+- **History:** tests were added during implementation, after the initial code;
+  no tests-first history is claimed or reconstructed.
+- **Validation:** offline route/policy tests and real PostgreSQL/sandbox integration
+  cover authorization, evidence validation, concurrent decisions, retained history
+  and exclusion of superseded submissions. No real model call is involved.
+  Final run: 109 tests passed, zero failures, with all integration flags enabled
+  against an isolated PostgreSQL database. Backend TypeScript/lint/format checks
+  and frontend build/ESLint/Biome passed. Tool: Codex with local shell commands.
+
+## P-11 — Authorized live Gemini smoke test (2026-11-25)
+
+- **Request:** test the API key the user added locally. No key was printed,
+  committed, copied into frontend code or passed to the sandbox.
+- **Observed:** authenticated model listing returned 200. Generation requests for
+  Gemini 3.5 Flash-Lite and a minimal 2.5 Flash-Lite diagnostic returned HTTP 402,
+  RESOURCE_EXHAUSTED, with Google's prepayment-credits-depleted message.
+- **Outcome:** the application's semantic verdict became unsure with no evidence.
+  No successful model evaluation, provider token usage, or actual charge is
+  claimed. This used synthetic input, not student submissions. Google project
+  billing/free-tier eligibility must be resolved before successful live validation.
