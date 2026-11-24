@@ -1,4 +1,7 @@
 import { Elysia } from "elysia";
+import { createReviewModule } from "./modules/constraint-review/queue.index";
+import { ReviewService } from "./modules/constraint-review/queue.service";
+import { DrizzleReviewRepository } from "./modules/constraint-review/queue.repository";
 import { createCorsPlugin } from "./plugins/cors.plugin";
 import { db } from "./db/db";
 import "dotenv/config";
@@ -78,6 +81,12 @@ export const createApp = (deps: AppDependencies = {}) => {
       }),
     )
     .use(createLabModule({ labService, jwtAuth: jwtPlugins.jwtAuth }))
+    .use(
+      createReviewModule({
+        service: new ReviewService(new DrizzleReviewRepository(db), labService),
+        jwtAuth: jwtPlugins.jwtAuth,
+      }),
+    )
     .use(
       createSubmissionModule({
         submissionService,

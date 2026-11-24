@@ -153,6 +153,61 @@ integration("Accepted submission review persistence", () => {
       ).toBe(0);
 
       const rollbackSubmission = await createQueued();
+      // Keep the original submission current while testing persisted TA decisions.
+      await pool.query(
+        "UPDATE submissions SET received_at=$2 WHERE submission_id=$1",
+        [rollbackSubmission.submissionId, new Date(now.getTime() - 1)],
+      );
+      const { DrizzleReviewRepository } =
+        await import("../src/modules/constraint-review/queue.repository");
+      const queue = new DrizzleReviewRepository(db);
+      const items = await queue.list(lab.labId);
+      expect(items).toHaveLength(2);
+      const item = items.find((r) => r.constraintId === "C1");
+      if (!item) throw new Error("Missing C1 review item");
+      expect(item).toMatchObject({
+        deduction: "2.00",
+        proposedVerdict: "violation",
+        version: 0,
+        required: true,
+      });
+      const decision = {
+        verdict: "violation" as const,
+        reason: "Confirmed banned call",
+        evidence: item.evidence,
+        version: 0,
+      };
+      const competing = await Promise.allSettled([
+        queue.decide(lab.labId, item.id, fixture.ta_id, decision),
+        queue.decide(lab.labId, item.id, fixture.ta_id, decision),
+      ]);
+      expect(competing.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+      expect(competing.filter((r) => r.status === "rejected")).toHaveLength(1);
+      await queue.decide(lab.labId, item.id, fixture.ta_id, {
+        verdict: "pass",
+        reason: "TA override",
+        evidence: [],
+        version: 1,
+      });
+      const history = await pool.query(
+        "SELECT sequence_number,is_current FROM review_decisions WHERE review_item_id=$1 ORDER BY sequence_number",
+        [item.id],
+      );
+      expect(history.rows).toEqual([
+        { sequence_number: 1, is_current: false },
+        { sequence_number: 2, is_current: true },
+      ]);
+      await pool.query(
+        "UPDATE submissions SET received_at=$2 WHERE submission_id=$1",
+        [rollbackSubmission.submissionId, new Date(now.getTime() + 1)],
+      );
+      expect(await queue.list(lab.labId)).toHaveLength(0);
+      await expect(
+        queue.decide(lab.labId, item.id, fixture.ta_id, {
+          ...decision,
+          version: 2,
+        }),
+      ).rejects.toMatchObject({ status: 409 });
       const repository = new PostgresJudgeQueueRepository(pool, {
         save: async (transaction, input) => {
           await writer.save(transaction, input);
@@ -203,6 +258,10 @@ integration("Accepted submission review persistence", () => {
         ).rows[0],
       ).toEqual({ judge_status: "running", overall_verdict: null });
     } finally {
+      await pool.query(
+        "DELETE FROM review_decisions WHERE review_item_id IN (SELECT review_item_id FROM review_items WHERE lab_id=$1)",
+        [lab.labId],
+      );
       for (const table of [
         "review_items",
         "review_runs",
