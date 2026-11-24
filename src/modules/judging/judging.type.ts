@@ -1,5 +1,9 @@
 import type { LabJudgeProvider } from "../lab/lab.type";
 import type { SubmissionJudgeSourceProvider } from "../submissions/submission.type";
+import type {
+  ConstraintReviewer,
+  ConstraintVerdict,
+} from "../constraint-review/contract";
 
 export type JudgeVerdict = "AC" | "WA" | "TLE" | "MLE" | "RE" | "CE";
 export type JudgeBundle = NonNullable<
@@ -33,6 +37,7 @@ export interface JudgeQueueRepository {
     claim: JudgeClaim,
     result: JudgeResult,
     now: Date,
+    review: ConstraintVerdict[],
   ): Promise<boolean>;
   failClaim(
     claim: JudgeClaim,
@@ -48,6 +53,7 @@ export type SandboxRunner = {
   }): Promise<JudgeResult>;
 };
 export type JudgeWorkerOptions = {
+  reviewer?: ConstraintReviewer;
   workerId: string;
   leaseMs: number;
   heartbeatMs: number;

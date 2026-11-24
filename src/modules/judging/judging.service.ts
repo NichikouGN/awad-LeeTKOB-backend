@@ -1,5 +1,6 @@
 import type { LabJudgeProvider } from "../lab/lab.type";
 import type { SubmissionJudgeSourceProvider } from "../submissions/submission.type";
+import type { ConstraintVerdict } from "../constraint-review/contract";
 import type {
   JudgeQueueRepository,
   JudgeResult,
@@ -61,6 +62,7 @@ export class JudgeWorker {
 
     let heartbeat: ReturnType<typeof setInterval> | undefined;
     let leaseLost = false;
+    let phase: "judge" | "review" = "judge";
     heartbeat = setInterval(() => {
       void this.repository
         .renewLease(claim, this.now(), this.options.leaseMs)
@@ -92,13 +94,53 @@ export class JudgeWorker {
         );
         return true;
       }
-      if (!leaseLost)
-        await this.repository.completeClaim(claim, result, this.now());
+      if (!leaseLost) {
+        phase = "review";
+        let review: ConstraintVerdict[] = [];
+        if (result.overallVerdict === "AC") {
+          if (!this.options.reviewer && bundle.constraints.length)
+            throw new Error("Constraint reviewer is not configured");
+          if (this.options.reviewer)
+            review = await this.options.reviewer.review({
+              submissionId: claim.submissionId,
+              statement: bundle.statement,
+              constraints: bundle.constraints.map(({ id, text }) => ({
+                id,
+                text,
+              })),
+              sourceCode: source.sourceCode.toString("utf8"),
+            });
+          const expectedIds = new Set(
+            bundle.constraints.map((constraint) => constraint.id),
+          );
+          if (
+            !Array.isArray(review) ||
+            review.length !== bundle.constraints.length ||
+            new Set(review.map((proposal) => proposal?.constraint)).size !==
+              expectedIds.size ||
+            review.some(
+              (proposal) => !proposal || !expectedIds.has(proposal.constraint),
+            )
+          )
+            throw new ReviewResultError();
+        }
+        if (!leaseLost)
+          await this.repository.completeClaim(
+            claim,
+            result,
+            this.now(),
+            review,
+          );
+      }
     } catch (error) {
       const category =
         error instanceof JudgeInputError
           ? "judge-input-invalid"
-          : "sandbox-unavailable";
+          : error instanceof ReviewResultError
+            ? "constraint-review-invalid"
+            : phase === "review"
+              ? "constraint-review-unavailable"
+              : "sandbox-unavailable";
       await this.repository.failClaim(
         claim,
         category,
@@ -113,3 +155,4 @@ export class JudgeWorker {
 }
 
 class JudgeInputError extends Error {}
+class ReviewResultError extends Error {}

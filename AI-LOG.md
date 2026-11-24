@@ -1,5 +1,82 @@
 # AI use log
 
+## P-07 — Review and commit the changes (2026-11-24)
+
+- **Found / Changed:** CI referenced an absent hard-rule integration test. Restored
+  focused syntax-trap, fake-model guardrail, CLI, CORS and real integration tests
+  so the committed commands refer to files that exist. Custom `.in`/`.out` files
+  removed during the discussion were left removed; these tests do not need them.
+- **Found / Changed:** schema validation coerced a model verdict with `String()`,
+  accepting an invalid array such as `["pass"]`. A new regression test failed
+  first; validation now requires an actual string before checking allowed values.
+- **Validation:** the current complete suite passed **97 tests, zero failures**
+  with all Docker/PostgreSQL/Redis integration flags enabled. The checker image
+  built and wrote 10 custom predictions with networking disabled and memory/PID
+  limits. No real model was called and no official eval result is claimed.
+- **History:** the user requested commits after the implementation work. These
+  commits group the existing formatter, CORS and hard-rule integration changes;
+  they are not evidence of a tests-first Git history and no history was rewritten.
+
+## P-06 — Make completion reviews explicit (2026-11-24)
+
+- **Changed:** made `completeClaim`'s review array required. Non-Accepted results
+  pass `[]`; Accepted results with constraints require a reviewer and exactly one
+  proposal for each declared constraint. Missing, duplicate, partial or unrelated
+  proposals fail the job for retry before completion is persisted.
+- **Rejected:** merely removing `?` while silently substituting an empty array
+  for missing Accepted reviews. Added regression cases before implementation;
+  updated the existing completion expectation to assert the required fourth argument.
+
+## P-05 — PA3 hard rules and integration (2026-11-24)
+
+User scope: read the attached class brief and PA3 rubric, verify the claimed
+sandbox flow, implement hard-rule checks and check their integration. Tool:
+OpenAI Codex with local Bun, TypeScript, Tree-sitter WASM and Docker. No hosted
+model calls, charges, deployment changes or official eval results were made.
+
+### Changed / Rejected
+
+- **Changed:** wrote hard-rule tests before implementation (the first run failed
+  because the module did not exist); added namespace/string/comment/include
+  traps, aliases, templates, exact evidence and model-off checks. Added fake-model
+  timeout/schema tests before the service implementation. No existing test,
+  official corpus or label was loosened to make code pass.
+- **Found / Changed:** additional tests exposed a false violation for a nested
+  student namespace named `std`, a missed imported function reference, and a
+  using-directive leaking backward into earlier code. Fixed namespace binding,
+  reference traversal and lexical scope snapshots; retained the regression tests.
+- **Rejected:** raw-text matching and pretending Tree-sitter is a full C++
+  preprocessor/compiler. Unsupported macros, conditional compilation, parse
+  failures and ambiguous overloads remain explicit `unsure` outcomes. Full
+  published-dev-set ban-list coverage is not claimed.
+- **Changed:** wired Accepted worker results into hard-rule review, persisted
+  proposals in the fenced judge transaction, and added an opt-in real
+  database/sandbox integration test. Student snapshots and grades are not given
+  proposal data. Added a model-off CLI/Dockerfile and five custom tagged cases.
+- **Rejected:** marking the whole PA3 flow complete merely because sandbox files
+  existed. Real semantic calls, the TA review API, deployment and official eval
+  evidence are still missing. The detailed audit records those gaps.
+- **Rejected:** rounding pass sampling independently for each submission; FAQ-10
+  specifies the lab-wide population. Proposals stay pending and provisional until
+  the TA queue workflow implements counted-submission selection and sampling.
+- **Changed:** completed the earlier CORS fix for Vite origins, JSON/bearer-token
+  requests and `Idempotency-Key`, with preflight/error-response tests.
+- **Found / Changed:** the local format check flagged 68 unchanged files because
+  Git checked them out with CRLF. `endOfLine: auto` makes the existing formatter
+  work on both Windows and Linux without a repository-wide formatting rewrite.
+- **Validation so far:** the real PostgreSQL/Redis stop/restart test passed.
+  Unit tests, lint, format and type checks passed. Docker image downloads were
+  slow; final sandbox/checker container results will be appended after completion.
+- **Final validation:** 104 tests passed with all sandbox, PostgreSQL/Redis and
+  hard-rule integration flags enabled; zero failed. The real judge image compiled
+  an Accepted fixture and its hard-rule evidence was stored exactly once while
+  remaining absent from the student snapshot. A simulated failure after review
+  inserts rolled the entire completion transaction back. All nine attack tests
+  passed. The network-disabled, 512 MiB checker container produced the same 10
+  custom predictions as the host CLI. Real HTTP CORS preflight and demo-admin
+  login passed too. No official dev-set score or public CI run is claimed.
+
+
 This log records project-specific prompts, changes kept, and suggestions rejected.
 Add each follow-up prompt that asks for a fix; refer to a contract section and a
 failing test, never paste or edit test code to direct a fix.

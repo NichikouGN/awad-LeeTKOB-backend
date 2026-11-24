@@ -2,6 +2,7 @@
   "name": "awad-LeeTKOB-backend",
   "version": "1.0.50",
   "scripts": {
+    "checker": "bun run src/modules/constraint-review/checker.ts",
     "db:generate": "npx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate && bun run src/db/migrations/apply-outbox-notify.ts",
     "db:seed": "bun run src/db/seed.ts",
@@ -26,7 +27,9 @@
     "drizzle-orm": "^1.0.0-rc.5",
     "elysia": "^2.0.0-rc.3",
     "ioredis": "^6.0.0",
-    "pg": "^8.23.1"
+    "pg": "^8.23.1",
+    "tree-sitter-wasms": "0.1.13",
+    "web-tree-sitter": "0.20.8"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.6",

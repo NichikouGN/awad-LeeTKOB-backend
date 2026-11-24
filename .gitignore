@@ -12,6 +12,7 @@ drizzle/
 
 # testing
 /coverage
+/checker-output/
 
 # next.js
 /.next/
