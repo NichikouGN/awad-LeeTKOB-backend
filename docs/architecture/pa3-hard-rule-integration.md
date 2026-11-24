@@ -98,9 +98,10 @@ afterward; the reusable checker and judge images remain available locally.
   conditional compilation, parse failures and ambiguous overload resolution
   currently become `unsure`. This does not meet the top-band promise to decide
   every ban-list pair until measured on the published dataset.
-- Wire the teammate's real model adapter: strip identities as well as comments,
-  enforce the per-lab budget, and store request IDs, usage, latency and cost.
-  Record one genuine dev-set run and the 80-submission cost arithmetic.
+- The real Gemini adapter is wired to the worker and CLI, with identity/comment
+  removal, schema/evidence validation, timeout and a persistent per-lab budget.
+  Add a key and verify one genuine provider/dev-set run. No hosted call or
+  official model evaluation is claimed by the offline checks.
 - Implement the TA-only review queue API with class ownership and latest counted
   submission selection (FAQ-02) and lab-wide pass sampling (FAQ-10). Students
   must not see proposals (FAQ-08).
@@ -108,8 +109,8 @@ afterward; the reusable checker and judge images remain available locally.
   old publish contract test file is currently commented out and its route is not
   mounted; its presence is not evidence of a working publish gate.
 - Create the public deployment and verify the three required solution types via
-  actual TA/student accounts. Seed TA/student password hashes are placeholders;
-  those rows are not usable public test accounts as they stand.
+  actual TA/student accounts. The local demo TA now uses password `1234`; the
+  student seed hash remains a placeholder. Configure suitable public test accounts.
 - Complete `PA3.md`, `SELF_ASSESSMENT_REPORT.md`, the recording, real CI run and
   model eval evidence before selecting the submission commit/tag. No tag,
   release, remote setting, or public deployment was changed in this slice.

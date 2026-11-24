@@ -1,5 +1,37 @@
 # AI use log
 
+## P-09 — Repair local demo TA login (2026-11-25)
+
+- **Request:** enable login as `seed:ta`.
+- **Changed:** replace its invalid plaintext password placeholder with bcrypt for
+  the local demo password `1234`. Seeding repairs only the original `123`
+  placeholder and preserves passwords already changed by the user.
+- **Validation:** applied local seeds; TypeScript, lint and file formatting passed.
+  Local HTTP login returned 200 with role TA. No access token was printed.
+
+## P-08 — Gemini constraint review (2026-11-25)
+
+- **Request:** implement real Gemini AI checks; the user will add the key later.
+  The user then requested removal of the local fake Gemini setup while retaining
+  the real API integration.
+- **Changed:** added the Gemini Flash-Lite REST adapter, strict schema/evidence
+  validation, abortable timeout, comment/account-identity redaction, worker and
+  checker configuration, and a Drizzle ledger enforcing the per-lab budget across
+  workers. Calls log actual provider IDs, usage, latency and cost estimates.
+  Review proposals remain pending and hidden from students.
+- **Removed:** the newly added fake HTTP Gemini server tests and test-only endpoint
+  override. Existing offline service guardrail tests remain. No credentials were
+  added and no hosted model call was made; live Gemini behavior and official
+  evaluation remain unverified until a key and dataset are available.
+- **Validation:** 104 tests passed with PostgreSQL, Redis and all Docker sandbox
+  attacks enabled, including concurrent persistent-budget enforcement. This was
+  an offline/model-off run, not evidence of a real provider evaluation.
+- **Local signup diagnosis:** the backend's configured PostgreSQL port 5432 was
+  unavailable (`ECONNREFUSED`). Started cached PostgreSQL 16 with a persistent
+  local volume after the Compose PostgreSQL 18 download stalled, migrated and
+  seeded the database. Real local signup returned 201 and login 200 with the
+  frontend Origin allowed. Removed the temporary diagnostic account afterward.
+
 ## P-07 — Review and commit the changes (2026-11-24)
 
 - **Found / Changed:** CI referenced an absent hard-rule integration test. Restored

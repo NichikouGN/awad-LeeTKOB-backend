@@ -62,12 +62,49 @@ The PA2 milestone contract is [`docs/contract/post-lab-publish.md`](docs/contrac
 
 ## Secrets and model spending
 
-No model API key is used by the current application and no model calls are
-enabled. An injectable semantic adapter boundary has schema/evidence validation and a timeout;
-the worker currently stores `unsure` for semantic constraints. The planned hard budget is **USD 1.00 per lab**. Before model calls are enabled, configure a
-provider-side spend limit of USD 1.00 per lab (or lower) and enforce the same cap
-in the application. The model provider and model are not selected yet. Never
-pass model credentials into the C++ sandbox.
+The worker and checker support the real Gemini API using `gemini-3.5-flash-lite`.
+Calls remain disabled by default (`MODEL_OFF=1`). Add your key only to the
+backend's ignored `.env`, then set:
+
+```dotenv
+MODEL_OFF=0
+GEMINI_API_KEY=your-own-key
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_BILLING_TIER=free
+MODEL_TIMEOUT_MS=10000
+MODEL_LAB_BUDGET_USD=1.00
+```
+
+Generate and apply the new tables with `bun run db:generate` and
+`bun run db:migrate`, then restart `bun run worker`. Do not use `db:start` to
+migrate an existing database: that command deletes Compose volumes.
+Only Accepted submissions reach constraint review. Hard rules run first;
+semantic constraints go to Gemini with JSON-schema output, exact source-line
+evidence validation and an abortable timeout. Failures become `unsure` for TA
+review. Proposals do not create grades or appear in student snapshots.
+
+Comments and known account identities are removed before sending code, preserving
+line numbers. Evidence is checked against sanitized code and mapped back to the
+original line for the TA. This does not guarantee detection of arbitrary personal
+data embedded in code; use synthetic/anonymized examples for initial testing.
+Never pass the API key to the frontend or C++ sandbox.
+
+The free tier has quotas and depends on your Google project's eligibility. See
+[Google's model and pricing documentation](https://aistudio.google.com/docs/models/gemini-3.5-flash-lite).
+The application reserves a conservative paid-equivalent cost before each call,
+with a maximum **USD 1.00 per lab**, shared across workers through PostgreSQL
+row locking. Unknown costs (including timeouts) keep their reservation. The
+configured free-tier cost estimate is zero; provider billing is authoritative.
+At the configured paid rates ($0.30/M input, $2.50/M output including thinking),
+80 calls with 2,000 input and 300 output tokens each cost approximately $0.108;
+two semantic constraints per submission would make that $0.216.
+
+`model_calls` stores sanitized prompts, validated outputs, provider response IDs,
+optional HTTP request IDs, usage, latency and cost estimates. `review_runs`
+aggregates known usage. Checker runs also write `.calls.jsonl` and
+`.cost-summary.json` next to predictions; their budget applies per problem per
+invocation. A real provider run has not been verified: no key was supplied and
+no hosted call was made. There is no local fake Gemini server or endpoint override.
 
 Submission intake writes the submission, judge job, and outbox event in one
 PostgreSQL transaction. A trigger sends a transactional notification after
