@@ -1,8 +1,11 @@
 import { db } from "../db";
 import { users } from "../schema/users.schema";
+import { and, eq } from "drizzle-orm";
+import { hashPassword } from "../../modules/auth/auth.utils";
 
 export async function seedUsers() {
   const now = new Date();
+  const taPasswordHash = await hashPassword("1234"); // Local demo password.
 
   const userSeed = [
     {
@@ -18,7 +21,7 @@ export async function seedUsers() {
     {
       email: "seed:ta",
       displayName: "Demo TA",
-      passwordHash: "123",
+      passwordHash: taPasswordHash,
       role: "TA",
       userStatus: "ACTIVE",
       createdAt: now,
@@ -36,4 +39,9 @@ export async function seedUsers() {
   ] satisfies (typeof users.$inferInsert)[];
 
   await db.insert(users).values(userSeed).onConflictDoNothing();
+  // Repair the old placeholder without resetting an already changed password.
+  await db
+    .update(users)
+    .set({ passwordHash: taPasswordHash, updatedAt: now })
+    .where(and(eq(users.email, "seed:ta"), eq(users.passwordHash, "123")));
 }
