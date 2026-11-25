@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - "**"
+    tags:
+      - "pa3"
   workflow_dispatch:
 
 permissions:
@@ -39,3 +41,18 @@ jobs:
         env:
           DOCKER_SANDBOX_TESTS: "1"
         run: bun test test/sandbox/docker-sandbox.test.ts
+      - name: Accepted submission hard-rule integration
+        env:
+          HARD_RULE_INTEGRATION: "1"
+          MODEL_OFF: "1"
+        run: bun test test/hard-rule.integration.test.ts test/model-ledger.integration.test.ts
+      - name: Build and run model-off checker without network
+        run: |
+          docker build -f Dockerfile.checker -t leetkob-checker:local .
+          mkdir -p checker-output
+          docker run --rm --network none --memory 512m --pids-limit 64 \
+            --user "$(id -u):$(id -g)" -e MODEL_OFF=1 \
+            --mount type=bind,src="$PWD/test/fixtures/hard-rule-dev",dst=/data,readonly \
+            --mount type=bind,src="$PWD/checker-output",dst=/output \
+            leetkob-checker:local /data /output/predictions.jsonl
+          test "$(wc -l < checker-output/predictions.jsonl)" -eq 10

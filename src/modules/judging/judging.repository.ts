@@ -1,12 +1,19 @@
 import type { Pool } from "pg";
 import type {
+  ConstraintVerdict,
+  ReviewWriter,
+} from "../constraint-review/contract";
+import type {
   JudgeClaim,
   JudgeQueueRepository,
   JudgeResult,
 } from "./judging.type";
 
 export class PostgresJudgeQueueRepository implements JudgeQueueRepository {
-  constructor(private readonly pool: Pool) {}
+  constructor(
+    private readonly pool: Pool,
+    private readonly reviewWriter?: ReviewWriter,
+  ) {}
 
   async claimNext(
     workerId: string,
@@ -80,7 +87,12 @@ export class PostgresJudgeQueueRepository implements JudgeQueueRepository {
     claim: JudgeClaim,
     result: JudgeResult,
     now: Date,
+    review: ConstraintVerdict[],
   ): Promise<boolean> {
+    if (!Array.isArray(review))
+      throw new Error("Review proposals must be an array");
+    if (result.overallVerdict !== "AC" && review.length)
+      throw new Error("Non-Accepted submissions cannot have review proposals");
     const client = await this.pool.connect();
     try {
       await client.query("BEGIN");
@@ -122,6 +134,16 @@ export class PostgresJudgeQueueRepository implements JudgeQueueRepository {
          WHERE submission_id = $1`,
         [submissionId, result.overallVerdict, now],
       );
+      if (review.length) {
+        if (!this.reviewWriter)
+          throw new Error("Review persistence is not configured");
+        await this.reviewWriter.save(client, {
+          submissionId,
+          attemptNumber: claim.attemptCount,
+          verdicts: review,
+          now,
+        });
+      }
       await client.query("COMMIT");
       return true;
     } catch (error) {

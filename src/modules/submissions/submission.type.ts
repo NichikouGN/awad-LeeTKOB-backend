@@ -32,5 +32,6 @@ export interface SubmissionJudgeSourceProvider {
   getJudgeSource(submissionId: string): Promise<{
     labId: string;
     sourceCode: Buffer;
+    studentUserId?: string;
   } | null>;
 }

@@ -27,6 +27,13 @@
 
 # Never
 
+- Never tune prompts or hard rules to published dev-set solution IDs or copy
+  predictions from labels. Keep custom labelled cases separate from that corpus.
+- Never claim a fake-model run is a real provider run or invent request IDs,
+  costs, CI results, deployment evidence, or evaluation scores.
+- Never give a submission container `--privileged`, a host bind mount, a Docker
+  socket, `--env-file`, or model credentials. Keep memory-attack reads intact.
+
 - Never expose model API keys or other secrets to the C++ sandbox.
 - Never call a real model from a unit or contract test.
 - Never edit tests, the evaluation data, or a label merely to make a check pass.

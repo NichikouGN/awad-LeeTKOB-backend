@@ -9,7 +9,7 @@ database stores bcrypt password hashes. See [current implementation status](docs
 
 The PA2 publish endpoint exists as a contract, but its handler is not mounted
 in `src/app.ts`. Lab authoring, durable submission intake, outbox dispatch,
-BullMQ judging, and Docker sandbox execution are implemented. Model review,
+BullMQ judging, Docker sandbox execution, and hard-rule review persistence are implemented. Real model review,
 publication, and appeals are not end-to-end features. The database remains the
 source of truth; Redis/BullMQ carries recoverable work notifications.
 
@@ -62,11 +62,54 @@ The PA2 milestone contract is [`docs/contract/post-lab-publish.md`](docs/contrac
 
 ## Secrets and model spending
 
-No model API key is used by the current application and no model calls are
-implemented. The planned hard budget is **USD 1.00 per lab**. Before model calls are enabled, configure a
-provider-side spend limit of USD 1.00 per lab (or lower) and enforce the same cap
-in the application. The model provider and model are not selected yet. Never
-pass model credentials into the C++ sandbox.
+The worker and checker support the real Gemini API using `gemini-3.5-flash-lite`.
+Calls remain disabled by default (`MODEL_OFF=1`). Add your key only to the
+backend's ignored `.env`, then set:
+
+```dotenv
+MODEL_OFF=0
+GEMINI_API_KEY=your-own-key
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_BILLING_TIER=free
+MODEL_TIMEOUT_MS=10000
+MODEL_LAB_BUDGET_USD=1.00
+```
+
+Generate and apply the new tables with `bun run db:generate` and
+`bun run db:migrate`, then restart `bun run worker`. Do not use `db:start` to
+migrate an existing database: that command deletes Compose volumes.
+Only Accepted submissions reach constraint review. Hard rules run first;
+semantic constraints go to Gemini with JSON-schema output, exact source-line
+evidence validation and an abortable timeout. Failures become `unsure` for TA
+review. Proposals do not create grades or appear in student snapshots.
+
+Comments and known account identities are removed before sending code, preserving
+line numbers. Evidence is checked against sanitized code and mapped back to the
+original line for the TA. This does not guarantee detection of arbitrary personal
+data embedded in code; use synthetic/anonymized examples for initial testing.
+Never pass the API key to the frontend or C++ sandbox.
+
+The free tier has quotas and depends on your Google project's eligibility. See
+[Google's model and pricing documentation](https://aistudio.google.com/docs/models/gemini-3.5-flash-lite).
+The application reserves a conservative paid-equivalent cost before each call,
+with a maximum **USD 1.00 per lab**, shared across workers through PostgreSQL
+row locking. Unknown costs (including timeouts) keep their reservation. The
+configured free-tier cost estimate is zero; provider billing is authoritative.
+At the configured paid rates ($0.30/M input, $2.50/M output including thinking),
+80 calls with 2,000 input and 300 output tokens each cost approximately $0.108;
+two semantic constraints per submission would make that $0.216.
+
+`model_calls` stores sanitized prompts, validated outputs, provider response IDs,
+optional HTTP request IDs, usage, latency and cost estimates. `review_runs`
+aggregates known usage. Checker runs also write `.calls.jsonl` and
+`.cost-summary.json` next to predictions; their budget applies per problem per
+invocation. Live smoke tests on 2026-11-25 authenticated model listing, but
+generation with both configured Flash-Lite and 2.5 Flash-Lite returned HTTP 402
+(`RESOURCE_EXHAUSTED`: prepayment credits depleted). No successful model verdict,
+token usage, charge or dev-set score is claimed. Check the Google project's
+billing/free-tier eligibility in AI Studio; setting `GEMINI_BILLING_TIER=free`
+only affects application estimates and does not change Google billing.
+There is no local fake Gemini server or endpoint override.
 
 Submission intake writes the submission, judge job, and outbox event in one
 PostgreSQL transaction. A trigger sends a transactional notification after
@@ -77,6 +120,65 @@ claim and complete jobs in PostgreSQL; BullMQ is not the source of truth.
 
 See [`PERMISSIONS.md`](PERMISSIONS.md) for assistant permissions and
 [`AI-LOG.md`](AI-LOG.md) for implementation decisions.
+
+## PA3 hard rules and integration
+
+Accepted submissions now run the C++ syntax-aware ban-list checker before any
+semantic adapter. Review proposals, exact evidence, and the frozen constraint
+revision are committed atomically with the judge result. They never write grades
+or appear in student snapshots. Assigned TAs can inspect and decide proposals
+through the review queue API and frontend. See the
+[integration audit](docs/architecture/pa3-hard-rule-integration.md).
+
+The checker reads `statement.md`, `constraints.json` (an array of `{id,text}` or
+`{"constraints":[...]}`), and `solutions/*.cpp` in each problem folder. It never
+reads labels, tests, or problem-specific configuration. This input layout has
+been checked against our own cases; compatibility with the lecturer's published
+dataset still needs verification when that dataset is available.
+
+```sh
+MODEL_OFF=1 bun run checker test/fixtures/hard-rule-dev /tmp/predictions.jsonl
+docker build -f Dockerfile.checker -t leetkob-checker .
+mkdir -p checker-output
+docker run --rm --network none --memory 512m --pids-limit 64 \
+  --user "$(id -u):$(id -g)" \
+  -e MODEL_OFF=1 \
+  --mount type=bind,src="$(pwd)/test/fixtures/hard-rule-dev",dst=/data,readonly \
+  --mount type=bind,src="$(pwd)/checker-output",dst=/output \
+  leetkob-checker /data /output/predictions.jsonl
+```
+
+On PowerShell, set `$env:MODEL_OFF='1'`, then run
+`bun run checker test/fixtures/hard-rule-dev checker-output/predictions.jsonl`.
+Predictions are JSONL with `solution`, `constraint`, `verdict`, and `evidence`.
+The adjacent `.decisions.jsonl` file records whether each pair called a model.
+With `MODEL_OFF=1`, semantic constraints become `unsure` and no model is called.
+
+Supported hard rules begin with `Do not use` or `Do not call` and list qualified
+names in backticks. The parser excludes comments, strings and includes; it
+handles direct calls/references, templates, lexical using declarations and
+namespace aliases. Macro/conditional preprocessing, unsupported syntax and
+ambiguous name resolution produce `unsure`; this is a known coverage limitation,
+not a claim that every C++ ban-list pair is decided. The original dev set and its
+`eval.mjs` have not been supplied, so no official eval score or real-model run is
+claimed. Five separate labelled/tagged custom solutions live under
+`test/fixtures/hard-rule-dev`.
+
+After database migrations/seeding and building `Dockerfile.judge`, run the real
+Accepted-submission integration test with:
+
+```sh
+HARD_RULE_INTEGRATION=1 MODEL_OFF=1 bun test test/hard-rule.integration.test.ts
+```
+
+That test uses the real database, sandbox and worker. It checks stored proposals,
+repeat-safe completion, no grade creation, and the student snapshot boundary.
+The CI workflow runs it alongside all nine sandbox attacks, including on `pa3`
+tag pushes.
+
+For the frontend, `CORS_ORIGINS` is a comma-separated allowlist, defaulting to
+`http://localhost:5173,http://127.0.0.1:5173`. The backend allows JSON, bearer-token,
+and `Idempotency-Key` headers. Restart the API after changing this setting.
 
 ## Product-owner FAQ
 
@@ -90,3 +192,17 @@ precedence if they conflict.
 [`AGENTS.md`](AGENTS.md) is the repository instruction file. Contract changes
 must be made separately from implementation changes, and tests/evaluation data
 must not be edited to make a check pass.
+
+## TA review queue
+
+TA: open **Quản lý Lab → Hàng chờ review** for a lab, or
+`/ta/labs/<labId>/reviews` in the frontend. The API is documented in
+[ta-review-queue.md](docs/contract/ta-review-queue.md).
+Queue view shows pending violations/unsure and a lab-wide rounded-up 10% sample
+of passes. All view permits inspecting and overriding every current verdict.
+Only the latest pre-deadline submission per student counts (FAQ-02).
+Open the source, choose exact evidence lines, explicitly select pass/violation,
+and supply a reason. Decisions record actor, time and version; competing edits
+return 409 and require a refresh. No grade/publication is written.
+Only an assigned TA can access the queue; student snapshots stay unchanged.
+No new database migration is required for this queue; it uses existing review tables.

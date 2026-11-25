@@ -15,6 +15,9 @@ import { DrizzleSubmissionRepository } from "./modules/submissions/submission.re
 import { UserRepository } from "./modules/user/user.repository";
 import { UserService } from "./modules/user/user.service";
 import { db, pool } from "./db/db";
+import { createConfiguredReviewer } from "./modules/constraint-review/config";
+import { DrizzleModelLedger } from "./modules/constraint-review/drizzle-model-ledger";
+import { PostgresReviewWriter } from "./modules/constraint-review/review-writer";
 
 const redisUrl = new URL(process.env.REDIS_URL ?? "redis://127.0.0.1:6379");
 const redisConnection = {
@@ -38,11 +41,27 @@ const sandbox = new DockerSandbox({
   outputLimitBytes: 1_048_576,
 });
 const judgeWorker = new JudgeWorker(
-  new PostgresJudgeQueueRepository(pool),
+  new PostgresJudgeQueueRepository(pool, new PostgresReviewWriter()),
   submissionRepository,
   labService,
   sandbox,
-  { workerId, leaseMs: 60_000, heartbeatMs: 15_000, maxAttempts: 3 },
+  {
+    workerId,
+    leaseMs: 60_000,
+    heartbeatMs: 15_000,
+    maxAttempts: 3,
+    requireReviewIdentity: process.env.MODEL_OFF === "0",
+    identityProvider: {
+      async getReviewIdentity(userId) {
+        const user = await userService.getUserProfile(userId);
+        return [user.displayName, user.email, user.userId];
+      },
+    },
+    reviewer: createConfiguredReviewer({
+      ledger: new DrizzleModelLedger(db),
+      onDecision: (decision) => console.info("Constraint review", decision),
+    }),
+  },
 );
 const queue = new JudgeQueue(redisConnection);
 const dispatcher = new OutboxDispatcher(pool, queue);

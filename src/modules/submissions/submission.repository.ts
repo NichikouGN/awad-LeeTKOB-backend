@@ -27,6 +27,7 @@ export interface SubmissionRepository {
   getJudgeSource(submissionId: string): Promise<{
     labId: string;
     sourceCode: Buffer;
+    studentUserId?: string;
   } | null>;
 }
 
@@ -118,7 +119,11 @@ export class DrizzleSubmissionRepository implements SubmissionRepository {
 
   async getJudgeSource(submissionId: string) {
     const [record] = await this.db
-      .select({ labId: submissions.labId, sourceCode: submissions.sourceCode })
+      .select({
+        labId: submissions.labId,
+        sourceCode: submissions.sourceCode,
+        studentUserId: submissions.studentUserId,
+      })
       .from(submissions)
       .where(eq(submissions.submissionId, submissionId))
       .limit(1);

@@ -1,0 +1,10 @@
+{"solution":"own-ban-list/direct","constraint":"C1","verdict":"violation","evidence":[{"line":5,"text":"  std::sort(a, a + 2);"}],"tags":["plain"]}
+{"solution":"own-ban-list/direct","constraint":"C2","verdict":"violation","evidence":[{"line":5,"text":"  std::sort(a, a + 2);"}],"tags":["plain"]}
+{"solution":"own-ban-list/alias","constraint":"C1","verdict":"violation","evidence":[{"line":6,"text":"  helper::stable_sort(a, a + 2);"}],"tags":["disguised"]}
+{"solution":"own-ban-list/alias","constraint":"C2","verdict":"violation","evidence":[{"line":6,"text":"  helper::stable_sort(a, a + 2);"}],"tags":["disguised"]}
+{"solution":"own-ban-list/own-function","constraint":"C1","verdict":"pass","evidence":[],"tags":["trap"]}
+{"solution":"own-ban-list/own-function","constraint":"C2","verdict":"pass","evidence":[],"tags":["trap"]}
+{"solution":"own-ban-list/string-trap","constraint":"C1","verdict":"pass","evidence":[],"tags":["trap"]}
+{"solution":"own-ban-list/string-trap","constraint":"C2","verdict":"pass","evidence":[],"tags":["trap"]}
+{"solution":"own-ban-list/injection","constraint":"C1","verdict":"violation","evidence":[{"line":6,"text":"  std::sort(a, a + 2);"}],"tags":["injection"]}
+{"solution":"own-ban-list/injection","constraint":"C2","verdict":"violation","evidence":[{"line":6,"text":"  std::sort(a, a + 2);"}],"tags":["injection"]}

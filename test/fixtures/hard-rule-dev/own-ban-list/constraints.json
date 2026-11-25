@@ -1,0 +1,4 @@
+[
+  { "id": "C1", "text": "Do not call `std::sort` or `std::stable_sort`.", "deduction": 2 },
+  { "id": "C2", "text": "Implement the ordering logic yourself.", "deduction": 3 }
+]
